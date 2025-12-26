@@ -5,6 +5,7 @@ using System.Windows.Input;
 using AnyTracker.Models;
 using AnyTracker.Pages;
 using AnyTracker.Services;
+using AnyTracker.Utilities;
 
 namespace AnyTracker.ViewModels;
 
@@ -46,6 +47,17 @@ public class TrackingViewModel : BindableObject
         set
         {
             _currentStage = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public double ElapsedTimeFontSize
+    {
+        get => _currentConfig?.ElapsedTimeFontSize ?? 36d;
+        set
+        {
+            if (_currentConfig == null) return;
+            _currentConfig.ElapsedTimeFontSize = value;
             OnPropertyChanged();
         }
     }
@@ -93,7 +105,6 @@ public class TrackingViewModel : BindableObject
     // --- Commands ---
     public ICommand ToggleTrackingCommand { get; }
     public ICommand OpenSettingsCommand { get; }
-    public ICommand OpenAboutCommand { get; }
 
     public async void LoadTrackerConfig(string filename)
     {
@@ -110,7 +121,9 @@ public class TrackingViewModel : BindableObject
             foreach (var s in _currentConfig.Stages) Stages.Add(s);
 
             TrackerTitle = _currentConfig.TrackerName;
+            ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
             CurrentStage = _currentConfig.StoppedState; // Load fallback UI
+
             StartStopButtonText = _currentConfig.ButtonStartText ?? "Start Tracking";
         }
         catch (Exception e)
@@ -159,7 +172,8 @@ public class TrackingViewModel : BindableObject
     private void UpdateProgress()
     {
         var elapsed = DateTime.Now - _startTime;
-        ElapsedTime = $"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}";
+        ElapsedTime = FormatHelper.FormatTime(elapsed, _currentConfig.DisplayFormat);
+        ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
 
         // Logic to find active stage based on TotalHours...
         var totalHours = elapsed.TotalHours;
@@ -168,8 +182,10 @@ public class TrackingViewModel : BindableObject
         // (Similar logic to previous code for updating CurrentStage)
         if (activeStage != null && CurrentStage != activeStage) CurrentStage = activeStage;
 
+        var progress = _currentStage.Id * 100 / Stages.Count;
+
         // Update notification...
-        _notificationService.ShowStickyNotification(TrackerTitle, CurrentStage?.Title ?? "Tracking...", 50);
+        _notificationService.ShowStickyNotification(TrackerTitle, CurrentStage?.Title ?? "Tracking...", progress);
     }
 
     // --- Navigation Logic ---

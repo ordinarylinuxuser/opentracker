@@ -51,7 +51,7 @@
 
                     <Label Text="{Binding ElapsedTime}"
                            TextColor="White"
-                           FontSize="36"
+                           FontSize="{Binding ElapsedTimeFontSize, FallbackValue=36}"
                            FontAttributes="Bold"
                            HorizontalOptions="Center" />
                 </VerticalStackLayout>

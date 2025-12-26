@@ -1,0 +1,47 @@
+{
+  "TrackerName": "Pregnancy Journey",
+  "ButtonStartText": "Start Tracking",
+  "ButtonStopText": "End Tracking",
+  "DisplayFormat": "Weeks",
+  "ElapsedTimeFontSize": 16,
+  "StoppedState": {
+    "Title": "Not Tracking",
+    "Description": "Track the journey from conception to birth.",
+    "Icon": "❤️",
+    "ColorHex": "#E91E63"
+  },
+  "Stages": [
+    {
+      "Title": "First Trimester",
+      "StartHour": 0,
+      "EndHour": 2184,
+      "Description": "Weeks 1-13. The baby's body structure forms.",
+      "Icon": "🌱",
+      "ColorHex": "#8BC34A"
+    },
+    {
+      "Title": "Second Trimester",
+      "StartHour": 2184,
+      "EndHour": 4368,
+      "Description": "Weeks 14-26. Rapid growth and movement felt.",
+      "Icon": "🤰",
+      "ColorHex": "#03A9F4"
+    },
+    {
+      "Title": "Third Trimester",
+      "StartHour": 4368,
+      "EndHour": 6720,
+      "Description": "Weeks 27-40. Getting ready for birth.",
+      "Icon": "👶",
+      "ColorHex": "#E91E63"
+    },
+    {
+      "Title": "Post-Term",
+      "StartHour": 6720,
+      "EndHour": 10000,
+      "Description": "Overdue. The baby is arriving any moment!",
+      "Icon": "🏥",
+      "ColorHex": "#9C27B0"
+    }
+  ]
+}

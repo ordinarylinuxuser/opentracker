@@ -1,0 +1,38 @@
+{
+  "TrackerName": "Pomodoro Focus",
+  "ButtonStartText": "Start Focus",
+  "ButtonStopText": "Stop Session",
+  "DisplayFormat": "Time",
+  "StoppedState": {
+    "Title": "Ready to Focus",
+    "Description": "Eliminate distractions. Work for 25 minutes.",
+    "Icon": "🧠",
+    "ColorHex": "#757575"
+  },
+  "Stages": [
+    {
+      "Title": "Deep Work",
+      "StartHour": 0,
+      "EndHour": 0.4166,
+      "Description": "Focus intently on a single task.",
+      "Icon": "🍅",
+      "ColorHex": "#F44336"
+    },
+    {
+      "Title": "Short Break",
+      "StartHour": 0.4166,
+      "EndHour": 0.5,
+      "Description": "Step away. Stretch or grab water.",
+      "Icon": "☕",
+      "ColorHex": "#4CAF50"
+    },
+    {
+      "Title": "Overtime",
+      "StartHour": 0.5,
+      "EndHour": 24,
+      "Description": "Session extended. Consider resetting.",
+      "Icon": "⚠️",
+      "ColorHex": "#FF9800"
+    }
+  ]
+}

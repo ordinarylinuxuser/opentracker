@@ -2,6 +2,7 @@
   "TrackerName": "Intermittent Fasting",
   "ButtonStartText": "Start Fasting",
   "ButtonStopText": "End Fast",
+  "DisplayFormat": "Time",
   "StoppedState": {
     "Title": "Not Fasting",
     "Description": "Eat well and prepare for your next fast.",
