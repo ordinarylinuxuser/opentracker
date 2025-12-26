@@ -538,3 +538,6 @@ google-services.json
 # Android Profiling
 *.hprof
 
+AnyTracker/bin
+AnyTracker/obj
+
