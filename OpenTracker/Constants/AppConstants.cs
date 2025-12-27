@@ -8,5 +8,5 @@ public static class AppConstants
 
     public const string DefaultTrackerFile = "config_fasting.json";
 
-    public const string GitHubRepoUrl = "https://github.com/ordinarylinuxuser/anytracker";
+    public const string GitHubRepoUrl = "https://github.com/ordinarylinuxuser/opentracker";
 }
