@@ -1,9 +1,11 @@
 name: Build Android Release
 
-# Trigger the workflow only when a Release is Published
 on:
+  # Trigger on release publication
   release:
     types: [published]
+  # ALLOWS MANUAL TRIGGER (Very useful for testing!)
+  workflow_dispatch:
 
 jobs:
   build-android:
@@ -27,32 +29,52 @@ jobs:
       - name: Restore Dependencies
         run: dotnet restore OpenTracker.sln
 
-      # 4. Decode the Keystore from Secrets
+      # 4. Decode the Keystore (Using Absolute Path)
       - name: Decode Keystore
+        shell: pwsh
         run: |
-          $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
-          [IO.File]::WriteAllBytes("OpenTracker/user.keystore", $pfx_cert_byte)
+          $keystorePath = "${{ github.workspace }}\user.keystore"
+          $base64 = "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          
+          if ([string]::IsNullOrWhiteSpace($base64)) {
+            Write-Error "ANDROID_KEYSTORE_BASE64 secret is empty!"
+            exit 1
+          }
 
-      # 5. Build, Sign, and Publish the APK
-      # Targeting net10.0-android
+          $bytes = [System.Convert]::FromBase64String($base64)
+          [IO.File]::WriteAllBytes($keystorePath, $bytes)
+          
+          Write-Host "Keystore created at: $keystorePath"
+
+      # 5. Build, Sign, and Publish
+      # We pass the ABSOLUTE PATH to the keystore so MSBuild cannot get lost
       - name: Build and Sign Android APK
         run: |
           dotnet publish OpenTracker/OpenTracker.csproj `
-          -f net10.0-android `
-          -c Release `
-          -p:AndroidPackageFormat=apk `
-          -p:AndroidKeyStore=true `
-          -p:AndroidSigningKeyStore=user.keystore `
-          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} `
-          -p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} `
-          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASSWORD }} `
-          --output ./build_output
+            -f net10.0-android `
+            -c Release `
+            -p:AndroidPackageFormat=apk `
+            -p:AndroidKeyStore=true `
+            -p:AndroidSigningKeyStore="${{ github.workspace }}\user.keystore" `
+            -p:AndroidSigningKeyAlias="${{ secrets.ANDROID_KEY_ALIAS }}" `
+            -p:AndroidSigningStorePass="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" `
+            -p:AndroidSigningKeyPass="${{ secrets.ANDROID_KEY_PASSWORD }}" `
+            --output ./build_output
 
-      # 6. Upload the APK to the GitHub Release Page
+      # 6. Upload the APK to the Release
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
+        if: github.event_name == 'release' # Only upload if this was a real release
         with:
           files: |
             ./build_output/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 7. Upload as Artifact (For manual testing)
+      - name: Upload Artifact (Manual Run)
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: OpenTracker-Android
+          path: ./build_output/*.apk
