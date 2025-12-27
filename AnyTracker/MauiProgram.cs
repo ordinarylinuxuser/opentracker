@@ -38,10 +38,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<TrackerService>();
 
         // ViewModels
-        builder.Services.AddSingleton<TrackingViewModel>();
 
         // Pages
         builder.Services.AddSingleton<LoadingPage>();
+        builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<TrackerSelectorPage>();

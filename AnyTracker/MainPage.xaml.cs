@@ -1,10 +1,14 @@
-﻿using AnyTracker.ViewModels;
+﻿#region
+
+using AnyTracker.ViewModels;
+
+#endregion
 
 namespace AnyTracker;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(TrackingViewModel viewModel)
+    public MainPage(MainViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

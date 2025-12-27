@@ -11,7 +11,7 @@ using AnyTracker.Utilities;
 
 namespace AnyTracker.ViewModels;
 
-public class TrackingViewModel : BindableObject
+public class MainViewModel : BindableObject
 {
     #region Private Fields
 
@@ -32,7 +32,7 @@ public class TrackingViewModel : BindableObject
 
     #region Constructor
 
-    public TrackingViewModel(INotificationService notificationService,
+    public MainViewModel(INotificationService notificationService,
         IDbService dbService,
         TrackerService trackerService)
     {
