@@ -3,6 +3,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using AnyTracker.Models;
+using AnyTracker.Pages;
 using AnyTracker.Services;
 using AnyTracker.Utilities;
 
@@ -42,8 +43,10 @@ public class MainViewModel : BindableObject
         _dbService = dbService;
         _notificationService = notificationService;
         ToggleTrackingCommand = new Command(ToggleTracking);
+        EditElapsedTimeCommand = new Command(async () => await EditElapsedTime());
         // Listen for config changes from Settings
         _trackerService.OnTrackerChanged += OnConfigChanged;
+
 
         // Check if config is already loaded (from app startup)
         if (_trackerService.CurrentConfig != null) OnConfigChanged();
@@ -56,6 +59,9 @@ public class MainViewModel : BindableObject
     // --- Bindable Properties ---
 
     public ObservableCollection<TrackingStage> Stages { get; set; } = [];
+
+    // Public accessor for ManualEntryPage
+    public DateTime StartTime => _startTime;
 
     public TrackingStage CurrentStage
     {
@@ -124,6 +130,7 @@ public class MainViewModel : BindableObject
 
     // --- Commands ---
     public ICommand ToggleTrackingCommand { get; }
+    public ICommand EditElapsedTimeCommand { get; }
 
     #endregion
 
@@ -264,6 +271,31 @@ public class MainViewModel : BindableObject
 
         _notificationService.ShowStickyNotification(TrackerTitle,
             $"{CurrentStage?.Title ?? "Tracking..."} {ElapsedTime}");
+    }
+
+    private async Task EditElapsedTime()
+    {
+        // Open the custom Date/Time Picker Page
+        await Shell.Current.Navigation.PushModalAsync(new ManualEntryPage(this));
+    }
+
+    public void UpdateStartTime(DateTime newTime)
+    {
+        _startTime = newTime;
+
+        // If we weren't tracking before, we are now (backdated start)
+        if (!IsTracking)
+        {
+            Preferences.Set(PrefIsTracking, true);
+            Preferences.Set(PrefStartTime, _startTime);
+            StartTrackingInternal(true);
+        }
+        else
+        {
+            // Just update the persistent time and refresh UI immediately
+            Preferences.Set(PrefStartTime, _startTime);
+            UpdateProgress();
+        }
     }
 
     #endregion

@@ -43,7 +43,11 @@
                            TextColor="White"
                            FontSize="{Binding ElapsedTimeFontSize, FallbackValue=36}"
                            FontAttributes="Bold"
-                           HorizontalOptions="Center" />
+                           HorizontalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding EditElapsedTimeCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </VerticalStackLayout>
             </Border>
 
@@ -88,6 +92,7 @@
                              HeightRequest="10"
                              WidthRequest="10"
                              CornerRadius="5"
+                             BackgroundColor="Transparent"
                              VerticalOptions="Start"
                              Margin="0,5,5,0" />
                 </Grid>

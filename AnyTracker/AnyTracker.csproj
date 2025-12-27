@@ -81,6 +81,9 @@
         <MauiXaml Update="Pages\TrackerSelectorPage.xaml">
             <SubType>Designer</SubType>
         </MauiXaml>
+        <MauiXaml Update="Pages\ManualEntryPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
     </ItemGroup>
 
     <ItemGroup>
@@ -90,6 +93,10 @@
         </Compile>
         <Compile Update="Pages\TrackerSelectorPage.xaml.cs">
             <DependentUpon>TrackerSelectorPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Pages\ManualEntryPage.xaml.cs">
+            <DependentUpon>ManualEntryPage.xaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
     </ItemGroup>

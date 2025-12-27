@@ -48,6 +48,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<TrackerSelectorPage>();
+        builder.Services.AddTransient<ManualEntryPage>();
         builder.Services.AddTransient<AboutPage>();
         return builder.Build();
         return builder.Build();
