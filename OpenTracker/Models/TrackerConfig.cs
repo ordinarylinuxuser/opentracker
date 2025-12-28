@@ -37,6 +37,20 @@ public class TrackerConfig : INotifyPropertyChanged
             }
         }
     }
+    private double _cycleLength = 24.0; // Default 24 hours
+
+    public double CycleLength
+    {
+        get => _cycleLength;
+        set
+        {
+            if (Math.Abs(_cycleLength - value) > 0.001)
+            {
+                _cycleLength = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     // Computed Property: Logic for Font Size
     [BsonIgnore]

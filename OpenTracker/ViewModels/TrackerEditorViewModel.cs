@@ -22,8 +22,8 @@ public class TrackerEditorViewModel : BindableObject
     public string ButtonStartText { get; set; } = "Start";
     public string ButtonStopText { get; set; } = "Stop";
 
-    // Changed property name
     public string DurationType { get; set; } = "Time";
+    public double CycleLength { get; set; } = 24.0;
 
     public ObservableCollection<TrackingStage> Stages { get; set; } = new();
 
@@ -55,6 +55,7 @@ public class TrackerEditorViewModel : BindableObject
         ButtonStartText = config.ButtonStartText;
         ButtonStopText = config.ButtonStopText;
         DurationType = config.DurationType; // Load duration type
+        CycleLength = config.CycleLength > 0 ? config.CycleLength : 24.0; // Load cycle length
 
         Stages.Clear();
         foreach (var s in config.Stages) Stages.Add(s);
@@ -74,6 +75,7 @@ public class TrackerEditorViewModel : BindableObject
             TrackerName = "",
             ButtonStartText = "Start",
             ButtonStopText = "Stop",
+            CycleLength = 24.0,
             StoppedState = new TrackingStage
             {
                 Title = "Idle",
@@ -86,6 +88,7 @@ public class TrackerEditorViewModel : BindableObject
 
         TrackerName = "";
         DurationType = "Time";
+        CycleLength = 24.0;
         Stages.Clear();
         OnPropertyChanged(string.Empty);
     }
@@ -145,6 +148,7 @@ public class TrackerEditorViewModel : BindableObject
         _editingConfig.ButtonStartText = ButtonStartText;
         _editingConfig.ButtonStopText = ButtonStopText;
         _editingConfig.DurationType = DurationType;
+        _editingConfig.CycleLength = CycleLength;
         _editingConfig.Stages = Stages.ToList();
 
         if (_editingConfig.StoppedState == null)

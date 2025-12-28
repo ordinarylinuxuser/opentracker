@@ -22,6 +22,12 @@
                                 SelectedItem="{Binding DurationType}" TextColor="White" TitleColor="Gray" />
                     </Grid>
 
+                    <Grid ColumnDefinitions="*, *">
+                        <Label Grid.Column="0" Text="Cycle Length" VerticalOptions="Center" TextColor="Gray" />
+                        <Entry Grid.Column="1" Placeholder="e.g., 24" Text="{Binding CycleLength}" Keyboard="Numeric"
+                               TextColor="White" />
+                    </Grid>
+
                     <Entry Placeholder="Start Button Text" Text="{Binding ButtonStartText}" TextColor="White" />
                     <Entry Placeholder="Stop Button Text" Text="{Binding ButtonStopText}" TextColor="White" />
                 </VerticalStackLayout>

@@ -2,6 +2,7 @@
   "ButtonStartText": "Start Fasting",
   "ButtonStopText": "End Fast",
   "DurationType": "Time",
+  "CycleLength": 24.0,
   "StoppedState": {
     "Title": "Not Fasting",
     "Description": "Eat well and prepare for your next fast.",

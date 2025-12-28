@@ -48,11 +48,14 @@ public class TrackerDrawable : BindableObject, IDrawable
         double currentValue = ViewModel.TotalDurationValue;
         string type = ViewModel.CurrentConfig.DurationType?.ToLower() ?? "time";
 
-        // 1. Determine Cycle Length based on DurationType
-        double cycleLength = 24.0; // Default Time (24h)
-
-        if (type == "day" || type == "days") cycleLength = 1.0; // 1 Day
-        else if (type == "week" || type == "weeks") cycleLength = 1.0; // 1 Week
+        // 1. Determine Cycle Length from Config (Fallback to logic if 0)
+        double cycleLength = ViewModel.CurrentConfig.CycleLength;
+        if (cycleLength <= 0)
+        {
+            cycleLength = 24.0; // Default Time (24h)
+            if (type == "day" || type == "days") cycleLength = 1.0;
+            else if (type == "week" || type == "weeks") cycleLength = 1.0;
+        }
 
         // 2. Calculate Cycle Position
         int completedCycles = (int)(currentValue / cycleLength);
@@ -119,9 +122,10 @@ public class TrackerDrawable : BindableObject, IDrawable
         {
             canvas.FontColor = activeColor;
             canvas.FontSize = 12;
-            string cycleLabel = "Day";
-            if (type.Contains("week")) cycleLabel = "Week";
-            else if (type.Contains("day")) cycleLabel = "Day";
+            string cycleLabel = "Cycle"; // Default generic
+            if (type.Contains("week") && cycleLength == 1.0) cycleLabel = "Week";
+            else if (type.Contains("day") && cycleLength == 1.0) cycleLabel = "Day";
+            else if (type.Contains("time") && cycleLength == 24.0) cycleLabel = "Day"; // Assuming 24h cycle usually implies Days
 
             // "Day 2", "Week 3", etc.
             canvas.DrawString($"{cycleLabel} {completedCycles + 1}", centerX - 25, centerY + 60, 50, 20, HorizontalAlignment.Center, VerticalAlignment.Center);

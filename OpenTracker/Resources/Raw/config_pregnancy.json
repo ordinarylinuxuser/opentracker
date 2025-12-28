@@ -2,6 +2,7 @@
   "ButtonStartText": "Start Tracking",
   "ButtonStopText": "End Tracking",
   "DurationType": "Week",
+  "CycleLength": 1.0,
   "StoppedState": {
     "Title": "Not Tracking",
     "Description": "Track the journey from conception to birth.",
