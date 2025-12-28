@@ -33,7 +33,7 @@
                 <GraphicsView x:Name="StatusGraphicsView"
                               InputTransparent="True"> 
                     <GraphicsView.Drawable>
-                        <local:TrackerDrawable ViewModel="{Binding .}" />
+                        <local:TrackerDrawable />
                     </GraphicsView.Drawable>
                 </GraphicsView>
 
@@ -43,29 +43,30 @@
                            FontSize="40"
                            HorizontalOptions="Center" />
 
-                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                        <HorizontalStackLayout.GestureRecognizers>
+                    <Grid ColumnDefinitions="*, Auto, *" WidthRequest="260">
+                        <Grid.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding EditElapsedTimeCommand}" />
-                        </HorizontalStackLayout.GestureRecognizers>
+                        </Grid.GestureRecognizers>
 
-                        <Label Text="{Binding ElapsedTime}"
+                        <Label Grid.Column="1"
+                               Text="{Binding ElapsedTime}"
                                TextColor="White"
                                FontSize="{Binding ElapsedTimeFontSize, FallbackValue=36}"
                                FontAttributes="Bold"
+                               HorizontalOptions="Center"
                                VerticalOptions="Center" />
 
-                        <Label Text="✏️" 
-                               FontSize="18" 
-                               TextColor="#666" 
+                        <Label Grid.Column="2"
+                               Text="✏️"
+                               FontSize="10"
+                               TextColor="#666"
+                               HorizontalOptions="Start"
                                VerticalOptions="Center"
+                               Margin="6,0,0,0"
                                TranslationY="2"/>
-                    </HorizontalStackLayout>
+                    </Grid>
                     
-                    <Label Text="Tap to Edit" 
-                           TextColor="#444" 
-                           FontSize="10" 
-                           HorizontalOptions="Center" />
-
+                  
                 </VerticalStackLayout>
             </Grid>
 

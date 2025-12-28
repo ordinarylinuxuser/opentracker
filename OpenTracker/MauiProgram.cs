@@ -18,7 +18,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
 #if DEBUG
-            .EnableHotReload()
+            // .EnableHotReload()
 #endif
             .ConfigureFonts(fonts =>
             {

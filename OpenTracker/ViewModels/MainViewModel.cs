@@ -28,7 +28,8 @@ public class MainViewModel : BindableObject
     private string _trackerTitle;
 
     private double _progress;
-    private double _maxHours = 24; // Default denominator
+
+    private double _totalHours;
 
     // Preference Keys
     private const string PrefIsTracking = "IsTracking";
@@ -49,8 +50,6 @@ public class MainViewModel : BindableObject
         EditElapsedTimeCommand = new Command(async () => await EditElapsedTime());
         // Listen for config changes from Settings
         _trackerService.OnTrackerChanged += OnConfigChanged;
-
-
         // Check if config is already loaded (from app startup)
         if (_trackerService.CurrentConfig != null) OnConfigChanged();
     }
@@ -137,13 +136,17 @@ public class MainViewModel : BindableObject
         }
     }
 
-    public double MaxHours
+
+    public double TotalHours
     {
-        get => _maxHours;
+        get => _totalHours;
         set
         {
-            _maxHours = value;
-            OnPropertyChanged();
+            if (Math.Abs(_totalHours - value) > 0.001)
+            {
+                _totalHours = value;
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -187,12 +190,6 @@ public class MainViewModel : BindableObject
             Stages.Add(s);
         }
 
-        if (_currentConfig.Stages.Count != 0)
-        {
-            MaxHours = _currentConfig.Stages.Max(s => s.EndHour);
-            // Prevent division by zero
-            if (MaxHours <= 0) MaxHours = 24;
-        }
 
         TrackerTitle = _currentConfig.TrackerName;
         ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
@@ -301,17 +298,12 @@ public class MainViewModel : BindableObject
         {
             ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
 
-            var totalHours = elapsed.TotalHours;
-            if (MaxHours > 0)
-            {
-                // Clamp between 0 and 1
-                Progress = Math.Clamp(totalHours / MaxHours, 0, 1);
-            }
+            TotalHours = elapsed.TotalHours;
 
-            var activeStage = Stages.FirstOrDefault(s => totalHours >= s.StartHour && totalHours < s.EndHour);
+            var activeStage = Stages.FirstOrDefault(s => TotalHours >= s.StartHour && TotalHours < s.EndHour);
 
             // If we are past the last stage, stay on the last stage or define behavior
-            if (activeStage == null && Stages.Any() && totalHours > Stages.Last().EndHour) activeStage = Stages.Last();
+            if (activeStage == null && Stages.Any() && TotalHours > Stages.Last().EndHour) activeStage = Stages.Last();
 
             if (activeStage != null && CurrentStage != activeStage)
             {

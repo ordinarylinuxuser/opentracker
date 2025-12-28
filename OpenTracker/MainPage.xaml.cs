@@ -13,6 +13,13 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+
+        // Because Drawables inside GraphicsView don't inherit BindingContext automatically
+        if (StatusGraphicsView.Drawable is TrackerDrawable drawable)
+        {
+            drawable.ViewModel = viewModel;
+        }
+
         _viewModel.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Progress) ||
@@ -23,18 +30,9 @@ public partial class MainPage : ContentPage
         };
     }
 }
-
 public class TrackerDrawable : BindableObject, IDrawable
 {
-    // Define BindableProperty
-    public static readonly BindableProperty ViewModelProperty =
-        BindableProperty.Create(nameof(ViewModel), typeof(MainViewModel), typeof(TrackerDrawable), null);
-
-    public MainViewModel ViewModel
-    {
-        get => (MainViewModel)GetValue(ViewModelProperty);
-        set => SetValue(ViewModelProperty, value);
-    }
+    public MainViewModel ViewModel { get; set; } = null!;
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -44,59 +42,91 @@ public class TrackerDrawable : BindableObject, IDrawable
 
         float centerX = dirtyRect.Center.X;
         float centerY = dirtyRect.Center.Y;
-        // Leave padding for the stroke and emojis
-        float radius = Math.Min(dirtyRect.Width, dirtyRect.Height) / 2 - 20;
+        float radius = Math.Min(dirtyRect.Width, dirtyRect.Height) / 2 - 25; // More padding for emojis
 
-        // 1. Draw Background Track
-        canvas.StrokeColor = Color.FromArgb("#333333");
-        canvas.StrokeSize = 6;
+        double totalHours = ViewModel.TotalHours;
+
+        // 1. Calculate 24h Cycle Info
+        int currentDay = (int)(totalHours / 24); // 0 = Day 1, 1 = Day 2...
+        double currentDayHours = totalHours % 24; // 0 to 24
+
+        // Map 0..24h to 0..360 degrees
+        // -90 degrees is 12:00 PM (Top of circle)
+        //float startAngle = 90;
+        float sweepAngle = (float)(currentDayHours / 24.0 * 360);
+
+        // 2. Determine Colors
+        // If we are past 24 hours, the "track" isn't empty gray anymore, 
+        // it's the color of the previous completed day (e.g., a dimmer version of primary).
+        var activeColor = Color.FromArgb(ViewModel.CurrentStage?.ColorHex ?? "#2196F3");
+        var trackColor = currentDay > 0 ? activeColor.WithAlpha(0.3f) : Color.FromArgb("#333333");
+
+        // 3. Draw Track (Background Circle)
+        canvas.StrokeColor = trackColor;
+        canvas.StrokeSize = 10;
         canvas.DrawCircle(centerX, centerY, radius);
 
-        // 2. Draw Progress Arc
-        // -90 is 12 o'clock
-        float startAngle = 90;
-        // Calculate end angle based on progress (0.0 - 1.0)
-        float progressAngle = (float)(ViewModel.Progress * 360);
-
-        // Use current stage color or default
-        var progressColor = Color.FromArgb(ViewModel.CurrentStage?.ColorHex ?? "#2196F3");
-        canvas.StrokeColor = progressColor;
-        canvas.StrokeSize = 6;
+        // 4. Draw Progress Arc (Current Day)
+        canvas.StrokeColor = activeColor;
+        canvas.StrokeSize = 10;
         canvas.StrokeLineCap = LineCap.Round;
 
-        // Draw the arc (Note: DrawArc takes top-left corner of bounding box, not center)
-        canvas.DrawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, startAngle, -progressAngle, false, false);
+        // DrawArc(x, y, w, h, startAngle, endAngle, clockwise, closed)
+        // Note: 90 is top, sweeping clockwise.
+        canvas.DrawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 90, 90 - sweepAngle, true, false);
 
-        // 3. Draw Stage Emojis
-        if (ViewModel.Stages != null && ViewModel.MaxHours > 0)
+        // 5. Draw Stage Emojis (Context Aware)
+        if (ViewModel.Stages != null)
         {
-            canvas.FontSize = 14;
+            canvas.FontSize = 20; // Bigger emojis
+
+            // Define the time window for the current circle (e.g., 24h to 48h)
+            double windowStart = currentDay * 24;
+            double windowEnd = (currentDay + 1) * 24;
 
             foreach (var stage in ViewModel.Stages)
             {
-                // Calculate angle for this stage start time
-                float stageRatio = (float)(stage.StartHour / ViewModel.MaxHours);
-                // Convert ratio to degrees, offset by -90 to start at top
-                double angleRad = (stageRatio * 360 - 90) * (Math.PI / 180);
+                // Does this stage exist in the current 24h window?
+                // It exists if it overlaps with [windowStart, windowEnd]
+                // Intersection logic: Max(startA, startB) < Min(endA, endB)
+                double overlapStart = Math.Max(stage.StartHour, windowStart);
+                double overlapEnd = Math.Min(stage.EndHour, windowEnd);
 
-                // Position on the circle (pushing out slightly to radius + 15)
-                float markerR = radius + 15;
-                float x = centerX + markerR * (float)Math.Cos(angleRad);
-                float y = centerY + markerR * (float)Math.Sin(angleRad);
-
-                // Highlight active stage
-                if (stage.IsActive)
+                if (overlapStart < overlapEnd)
                 {
-                    // Draw a small glow/circle behind active stage icon
-                    canvas.FillColor = progressColor.WithAlpha(0.3f);
-                    canvas.FillCircle(x, y, 12);
-                }
+                    // Calculate where this stage starts *relative* to the current clock face (0-24)
+                    double relativeStartHour = overlapStart - windowStart;
 
-                // Draw Emoji centered at X,Y
-                // Note: Simple centering, might need slight adjustment based on font metrics
-                canvas.FontColor = Colors.White;
-                canvas.DrawString(stage.Icon, x - 10, y - 10, 20, 20, HorizontalAlignment.Center, VerticalAlignment.Center);
+                    // Convert hour (0-24) to Angle (-PI/2 to 3PI/2)
+                    // 0h = -90 deg (Top)
+                    double angleRad = (relativeStartHour / 24.0 * 2 * Math.PI) - (Math.PI / 2);
+
+                    // Position the emoji on the ring
+                    float markerR = radius + 20; // Push out past the stroke
+                    float x = centerX + markerR * (float)Math.Cos(angleRad);
+                    float y = centerY + markerR * (float)Math.Sin(angleRad);
+
+                    // Highlight if active
+                    if (stage.IsActive)
+                    {
+                        // Optional: Draw a glow behind active emoji
+                        canvas.FillColor = activeColor.WithAlpha(0.2f);
+                        canvas.FillCircle(x, y, 16);
+                    }
+
+                    canvas.FontColor = Colors.White;
+                    // Draw centered emoji
+                    canvas.DrawString(stage.Icon, x - 15, y - 15, 30, 30, HorizontalAlignment.Center, VerticalAlignment.Center);
+                }
             }
+        }
+
+        // 6. Draw "Day X" Badge if > 24h
+        if (currentDay > 0)
+        {
+            canvas.FontColor = activeColor;
+            canvas.FontSize = 12;
+            canvas.DrawString($"Day {currentDay + 1}", centerX - 25, centerY + 60, 50, 20, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
     }
 }

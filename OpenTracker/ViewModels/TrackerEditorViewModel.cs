@@ -149,7 +149,7 @@ public class TrackerEditorViewModel : BindableObject
         // Ensure stopped state exists
         if (_editingConfig.StoppedState == null)
             _editingConfig.StoppedState = new TrackingStage
-                { Title = "Stopped", Description = "Not running", Icon = "zzz", ColorHex = "#555555" };
+            { Title = "Stopped", Description = "Not running", Icon = "zzz", ColorHex = "#555555" };
 
         await _dbService.SaveTrackerAsync(_editingItem, _editingConfig);
         await Shell.Current.Navigation.PopModalAsync();
