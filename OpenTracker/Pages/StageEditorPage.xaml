@@ -14,11 +14,11 @@
 
             <Grid ColumnDefinitions="*, *">
                 <VerticalStackLayout>
-                    <Label Text="Start Hour" TextColor="Gray" FontSize="12" />
+                    <Label x:Name="StartLabel" Text="Start Hour" TextColor="Gray" FontSize="12" />
                     <Entry x:Name="StartEntry" Keyboard="Numeric" TextColor="White" />
                 </VerticalStackLayout>
                 <VerticalStackLayout Grid.Column="1">
-                    <Label Text="End Hour" TextColor="Gray" FontSize="12" />
+                    <Label x:Name="EndLabel" Text="End Hour" TextColor="Gray" FontSize="12" />
                     <Entry x:Name="EndEntry" Keyboard="Numeric" TextColor="White" />
                 </VerticalStackLayout>
             </Grid>

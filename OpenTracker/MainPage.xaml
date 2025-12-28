@@ -8,75 +8,34 @@
              NavigationPage.HasNavigationBar="False">
 
     <Grid RowDefinitions="Auto, Auto, Auto, *">
-
         <Grid Grid.Row="0" ColumnDefinitions="50, *, 50" Padding="10,15">
-
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="0">
-                <Label Text="OPEN TRACKER"
-                       TextColor="#2196F3"
-                       FontSize="10"
-                       FontAttributes="Bold"
-                       HorizontalOptions="Center" />
-                <Label Text="{Binding TrackerTitle}"
-                       TextColor="White"
-                       FontSize="16"
-                       FontAttributes="Bold"
-                       HorizontalOptions="Center" />
+                <Label Text="OPEN TRACKER" TextColor="#2196F3" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Label Text="{Binding TrackerTitle}" TextColor="White" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center" />
             </VerticalStackLayout>
-
         </Grid>
 
         <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="20" HorizontalOptions="Center">
-
             <Grid HeightRequest="260" WidthRequest="260" HorizontalOptions="Center">
-                
-                <GraphicsView x:Name="StatusGraphicsView"
-                              InputTransparent="True"> 
+                <GraphicsView x:Name="StatusGraphicsView" InputTransparent="True"> 
                     <GraphicsView.Drawable>
                         <local:TrackerDrawable />
                     </GraphicsView.Drawable>
                 </GraphicsView>
 
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="5">
-                    
-                    <Label Text="{Binding CurrentStage.Icon}"
-                           FontSize="40"
-                           HorizontalOptions="Center" />
-
+                    <Label Text="{Binding CurrentStage.Icon}" FontSize="40" HorizontalOptions="Center" />
                     <Grid ColumnDefinitions="*, Auto, *" WidthRequest="260">
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding EditElapsedTimeCommand}" />
                         </Grid.GestureRecognizers>
-
-                        <Label Grid.Column="1"
-                               Text="{Binding ElapsedTime}"
-                               TextColor="White"
-                               FontSize="{Binding ElapsedTimeFontSize, FallbackValue=36}"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center" />
-
-                        <Label Grid.Column="2"
-                               Text="✏️"
-                               FontSize="10"
-                               TextColor="#666"
-                               HorizontalOptions="Start"
-                               VerticalOptions="Center"
-                               Margin="6,0,0,0"
-                               TranslationY="2"/>
+                        <Label Grid.Column="1" Text="{Binding ElapsedTime}" TextColor="White" FontSize="{Binding CurrentConfig.ElapsedTimeFontSize, FallbackValue=36}" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="✏️" FontSize="10" TextColor="#666" HorizontalOptions="Start" VerticalOptions="Center" Margin="6,0,0,0" TranslationY="2"/>
                     </Grid>
-                    
-                  
                 </VerticalStackLayout>
             </Grid>
 
-            <Button Text="{Binding StartStopButtonText}"
-                    Command="{Binding ToggleTrackingCommand}"
-                    CornerRadius="25"
-                    HeightRequest="50"
-                    WidthRequest="200"
-                    FontAttributes="Bold"
-                    TextColor="White">
+            <Button Text="{Binding StartStopButtonText}" Command="{Binding ToggleTrackingCommand}" CornerRadius="25" HeightRequest="50" WidthRequest="200" FontAttributes="Bold" TextColor="White">
                 <Button.Triggers>
                     <DataTrigger TargetType="Button" Binding="{Binding IsTracking}" Value="False">
                         <Setter Property="BackgroundColor" Value="#4CAF50" />
@@ -89,92 +48,37 @@
         </VerticalStackLayout>
 
         <Border Grid.Row="2" Margin="20,5" BackgroundColor="#1E1E1E" Stroke="#333" StrokeShape="RoundRectangle 3">
-
             <VerticalStackLayout Spacing="5">
                 <Label Text="CURRENT STATUS" TextColor="#888" FontSize="10" Margin="5,0,0,0" FontAttributes="Bold" />
-
                 <Grid ColumnDefinitions="*, Auto">
                     <VerticalStackLayout Grid.Column="0">
-                        <Label Text="{Binding CurrentStage.Title, FallbackValue='Ready'}"
-                               TextColor="White"
-                               FontSize="18"
-                               Margin="5,0,0,0"
-                               FontAttributes="Bold" />
-                        <Label Text="{Binding CurrentStage.Description}"
-                               TextColor="#BBB"
-                               Margin="5,0,0,0"
-                               FontSize="13" />
+                        <Label Text="{Binding CurrentStage.Title, FallbackValue='Ready'}" TextColor="White" FontSize="18" Margin="5,0,0,0" FontAttributes="Bold" />
+                        <Label Text="{Binding CurrentStage.Description}" TextColor="#BBB" Margin="5,0,0,0" FontSize="13" />
                     </VerticalStackLayout>
-
-                    <BoxView Grid.Column="1"
-                             Color="{Binding CurrentStage.ColorHex}"
-                             HeightRequest="10"
-                             WidthRequest="10"
-                             CornerRadius="5"
-                             BackgroundColor="Transparent"
-                             VerticalOptions="Start"
-                             Margin="0,5,5,0" />
+                    <BoxView Grid.Column="1" Color="{Binding CurrentStage.ColorHex}" HeightRequest="10" WidthRequest="10" CornerRadius="5" BackgroundColor="Transparent" VerticalOptions="Start" Margin="0,5,5,0" />
                 </Grid>
             </VerticalStackLayout>
         </Border>
 
         <CollectionView Grid.Row="3" ItemsSource="{Binding Stages}" Margin="20,15">
             <CollectionView.Header>
-                <Label Text="ROADMAP"
-                       TextColor="#888"
-                       FontSize="12"
-                       FontAttributes="Bold"
-                       Margin="0,0,0,10" />
+                <Label Text="ROADMAP" TextColor="#888" FontSize="12" FontAttributes="Bold" Margin="0,0,0,10" />
             </CollectionView.Header>
 
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid ColumnDefinitions="40, *" Padding="0,12">
-
-                        <BoxView Grid.Column="0"
-                                 HorizontalOptions="Center"
-                                 WidthRequest="2"
-                                 Color="#333"
-                                 Margin="0,-12,0,-12"
-                                 ZIndex="-1" />
-
-
-                        <Border Grid.Column="0"
-                                HeightRequest="32"
-                                WidthRequest="32"
-                                Padding="0"
-                                BackgroundColor="#2D2D2D"
-                                Stroke="Transparent"
-                                StrokeShape="RoundRectangle 6"
-                                VerticalOptions="Start">
-
-                            <Label Text="{Binding Icon}"
-                                   FontSize="16"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center" />
+                        <BoxView Grid.Column="0" HorizontalOptions="Center" WidthRequest="2" Color="#333" Margin="0,-12,0,-12" ZIndex="-1" />
+                        <Border Grid.Column="0" HeightRequest="32" WidthRequest="32" Padding="0" BackgroundColor="#2D2D2D" Stroke="Transparent" StrokeShape="RoundRectangle 6" VerticalOptions="Start">
+                            <Label Text="{Binding Icon}" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
 
                         <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="10,0,0,0">
-                            <Label Text="{Binding Title}"
-                                   FontSize="16"
-                                   FontAttributes="Bold">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
-                                        <Setter Property="TextColor" Value="{Binding ColorHex}" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="False">
-                                        <Setter Property="TextColor" Value="#CCC" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
+                            <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" TextColor="{Binding TitleColor}" />
 
-                            <Label Text="{Binding StartHour, StringFormat='Hour {0}'}"
-                                   TextColor="#666"
-                                   FontSize="12" />
+                            <Label Text="{Binding Start, StringFormat='Start: {0}'}" TextColor="#666" FontSize="12" />
 
-                            <Label Text="{Binding Description}"
-                                   TextColor="#888"
-                                   FontSize="13" />
+                            <Label Text="{Binding Description}" TextColor="#888" FontSize="13" />
                         </VerticalStackLayout>
                     </Grid>
                 </DataTemplate>

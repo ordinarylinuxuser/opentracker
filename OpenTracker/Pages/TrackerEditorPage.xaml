@@ -18,8 +18,8 @@
                     <Grid ColumnDefinitions="*, *">
                         <Entry Grid.Column="0" Placeholder="Icon (Emoji)" Text="{Binding Icon}" TextColor="White"
                                MaxLength="2" />
-                        <Picker Grid.Column="1" Title="Format" ItemsSource="{Binding DisplayFormats}"
-                                SelectedItem="{Binding DisplayFormat}" TextColor="White" TitleColor="Gray" />
+                        <Picker Grid.Column="1" Title="Duration Type" ItemsSource="{Binding DurationTypes}"
+                                SelectedItem="{Binding DurationType}" TextColor="White" TitleColor="Gray" />
                     </Grid>
 
                     <Entry Placeholder="Start Button Text" Text="{Binding ButtonStartText}" TextColor="White" />
@@ -44,7 +44,7 @@
 
                                 <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                     <Label Text="{Binding Title}" TextColor="White" FontAttributes="Bold" />
-                                    <Label Text="{Binding StartHour, StringFormat='Hour {0}'}" TextColor="#2196F3"
+                                    <Label Text="{Binding Start, StringFormat='Start: {0}'}" TextColor="#2196F3"
                                            FontSize="10" />
                                 </VerticalStackLayout>
 

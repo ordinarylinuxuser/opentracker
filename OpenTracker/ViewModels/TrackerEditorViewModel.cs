@@ -17,15 +17,18 @@ public class TrackerEditorViewModel : BindableObject
     private TrackerManifestItem _editingItem;
     private bool _isNew;
 
-    // Form Properties
     public string TrackerName { get; set; }
-    public string Icon { get; set; } = "⏱️"; // Default
+    public string Icon { get; set; } = "⏱️";
     public string ButtonStartText { get; set; } = "Start";
     public string ButtonStopText { get; set; } = "Stop";
-    public string DisplayFormat { get; set; } = "Time";
+
+    // Changed property name
+    public string DurationType { get; set; } = "Time";
+
     public ObservableCollection<TrackingStage> Stages { get; set; } = new();
 
-    public List<string> DisplayFormats { get; } = new() { "Time", "Days", "Weeks" };
+    // Changed options
+    public List<string> DurationTypes { get; } = new() { "Time", "Day", "Week" };
 
     public ICommand SaveCommand { get; }
     public ICommand AddStageCommand { get; }
@@ -51,7 +54,7 @@ public class TrackerEditorViewModel : BindableObject
         Icon = item.Icon;
         ButtonStartText = config.ButtonStartText;
         ButtonStopText = config.ButtonStopText;
-        DisplayFormat = config.DisplayFormat;
+        DurationType = config.DurationType; // Load duration type
 
         Stages.Clear();
         foreach (var s in config.Stages) Stages.Add(s);
@@ -62,7 +65,6 @@ public class TrackerEditorViewModel : BindableObject
     public void InitializeNew()
     {
         _isNew = true;
-        // Generate a unique ID for new trackers
         var fileId = $"custom_{Guid.NewGuid()}.json";
 
         _editingItem = new TrackerManifestItem { FileName = fileId, Name = "", Icon = "" };
@@ -83,6 +85,7 @@ public class TrackerEditorViewModel : BindableObject
         };
 
         TrackerName = "";
+        DurationType = "Time";
         Stages.Clear();
         OnPropertyChanged(string.Empty);
     }
@@ -95,14 +98,13 @@ public class TrackerEditorViewModel : BindableObject
             Description = "Description",
             Icon = "✨",
             ColorHex = "#2196F3",
-            StartHour = 0,
-            EndHour = 1
+            Start = 0,
+            End = 1
         };
 
-        // Open StageEditorPage
-        var page = new StageEditorPage(newStage, (s) =>
+        // Pass DurationType to the editor to show correct labels
+        var page = new StageEditorPage(newStage, DurationType, (s) =>
         {
-            // Callback when saved
             Stages.Add(s);
         });
 
@@ -113,10 +115,9 @@ public class TrackerEditorViewModel : BindableObject
     {
         if (stage == null) return;
 
-        var page = new StageEditorPage(stage, (s) =>
+        // Pass DurationType to the editor
+        var page = new StageEditorPage(stage, DurationType, (s) =>
         {
-            // Force UI refresh if needed by removing/adding index, or just notify property changed if observable
-            // Simple hack to refresh list UI:
             var index = Stages.IndexOf(stage);
             if (index >= 0) Stages[index] = s;
         });
@@ -133,7 +134,7 @@ public class TrackerEditorViewModel : BindableObject
     {
         if (string.IsNullOrWhiteSpace(TrackerName))
         {
-            await Application.Current.MainPage.DisplayAlert("Error", "Tracker Name is required.", "OK");
+            await Application.Current.MainPage.DisplayAlertAsync("Error", "Tracker Name is required.", "OK");
             return;
         }
 
@@ -143,10 +144,9 @@ public class TrackerEditorViewModel : BindableObject
         _editingConfig.TrackerName = TrackerName;
         _editingConfig.ButtonStartText = ButtonStartText;
         _editingConfig.ButtonStopText = ButtonStopText;
-        _editingConfig.DisplayFormat = DisplayFormat;
+        _editingConfig.DurationType = DurationType;
         _editingConfig.Stages = Stages.ToList();
 
-        // Ensure stopped state exists
         if (_editingConfig.StoppedState == null)
             _editingConfig.StoppedState = new TrackingStage
             { Title = "Stopped", Description = "Not running", Icon = "zzz", ColorHex = "#555555" };

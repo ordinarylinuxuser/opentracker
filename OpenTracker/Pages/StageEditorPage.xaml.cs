@@ -11,24 +11,35 @@ public partial class StageEditorPage : ContentPage
     private TrackingStage _stage;
     private Action<TrackingStage> _onSave;
     private string _selectedColor = "#FFFFFF";
+    private string _durationType;
 
     public List<string> Emojis { get; } = new()
     {
         "🔥", "⚡", "💤", "🍽️", "🧠", "🏋️", "🧘", "💧", "☕", "🍺", "🚫", "✅", "👶", "💊", "📚", "🌡️", "🚀", "🚨"
     };
 
-    public StageEditorPage(TrackingStage stage, Action<TrackingStage> onSave)
+    public StageEditorPage(TrackingStage stage, string durationType, Action<TrackingStage> onSave)
     {
         InitializeComponent();
         _stage = stage;
+        _durationType = durationType;
         _onSave = onSave;
 
-        // FIX: Set BindingContext to 'this' so the XAML {Binding Emojis} works.
-        // We removed the incorrect "EmojiGrid.BindableLayout.ItemsSource = ..." line.
         BindingContext = this;
 
+        UpdateLabels();
         LoadColors();
         LoadStageData();
+    }
+
+    private void UpdateLabels()
+    {
+        string labelSuffix = "Hour";
+        if (_durationType.Equals("Day", StringComparison.OrdinalIgnoreCase)) labelSuffix = "Day";
+        if (_durationType.Equals("Week", StringComparison.OrdinalIgnoreCase)) labelSuffix = "Week";
+
+        StartLabel.Text = $"Start {labelSuffix}";
+        EndLabel.Text = $"End {labelSuffix}";
     }
 
     private void LoadColors()
@@ -54,7 +65,6 @@ public partial class StageEditorPage : ContentPage
             btn.Clicked += (s, e) =>
             {
                 _selectedColor = c;
-                // Visual feedback
                 TitleEntry.TextColor = Color.FromArgb(c);
             };
             ColorGrid.Children.Add(btn);
@@ -65,8 +75,8 @@ public partial class StageEditorPage : ContentPage
     {
         TitleEntry.Text = _stage.Title;
         DescEntry.Text = _stage.Description;
-        StartEntry.Text = _stage.StartHour.ToString();
-        EndEntry.Text = _stage.EndHour.ToString();
+        StartEntry.Text = _stage.Start.ToString();
+        EndEntry.Text = _stage.End.ToString();
         EmojiEntry.Text = _stage.Icon;
         _selectedColor = _stage.ColorHex;
     }
@@ -83,8 +93,8 @@ public partial class StageEditorPage : ContentPage
         _stage.Icon = EmojiEntry.Text;
         _stage.ColorHex = _selectedColor;
 
-        if (double.TryParse(StartEntry.Text, out double start)) _stage.StartHour = start;
-        if (double.TryParse(EndEntry.Text, out double end)) _stage.EndHour = end;
+        if (double.TryParse(StartEntry.Text, out double start)) _stage.Start = start;
+        if (double.TryParse(EndEntry.Text, out double end)) _stage.End = end;
 
         _onSave?.Invoke(_stage);
         await Navigation.PopModalAsync();

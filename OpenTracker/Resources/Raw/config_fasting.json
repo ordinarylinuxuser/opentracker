@@ -1,7 +1,7 @@
 {
   "ButtonStartText": "Start Fasting",
   "ButtonStopText": "End Fast",
-  "DisplayFormat": "Time",
+  "DurationType": "Time",
   "StoppedState": {
     "Title": "Not Fasting",
     "Description": "Eat well and prepare for your next fast.",
@@ -11,32 +11,32 @@
   "Stages": [
     {
       "Title": "Anabolic Phase",
-      "StartHour": 0,
-      "EndHour": 4,
+      "Start": 0,
+      "End": 4,
       "Description": "Your body is digesting food and storing energy.",
       "Icon": "🍽️",
       "ColorHex": "#4CAF50"
     },
     {
       "Title": "Catabolic Phase",
-      "StartHour": 4,
-      "EndHour": 16,
+      "Start": 4,
+      "End": 16,
       "Description": "Blood sugar falls. Body starts looking for stored energy.",
       "Icon": "⚡",
       "ColorHex": "#FFC107"
     },
     {
       "Title": "Fat Burning (Ketosis)",
-      "StartHour": 16,
-      "EndHour": 24,
+      "Start": 16,
+      "End": 24,
       "Description": "Deep fat burning begins. HGH levels increase.",
       "Icon": "🔥",
       "ColorHex": "#FF5722"
     },
     {
       "Title": "Autophagy",
-      "StartHour": 24,
-      "EndHour": 72,
+      "Start": 24,
+      "End": 72,
       "Description": "Cellular repair and recycling of old components.",
       "Icon": "🧬",
       "ColorHex": "#2196F3"

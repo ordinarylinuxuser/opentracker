@@ -6,19 +6,22 @@ public static class FormatHelper
     {
         switch (format?.ToLower())
         {
+            case "week":
             case "weeks":
-                // Useful for Pregnancy (Weeks + Days)
-                var totalDays = span.Days;
-                var weeks = totalDays / 7;
-                var days = totalDays % 7;
+                // Format: "1.5 Weeks"
+                var totalDays = span.TotalDays;
+                var weeks = (int)(totalDays / 7);
+                var days = (int)(totalDays % 7);
                 return $"{weeks} Wks, {days} Days";
 
+            case "day":
             case "days":
-                // Useful for Habits/Streaks (Days + Hours)
+                // Format: "2.5 Days"
                 return $"{span.Days} Days, {span.Hours} Hrs";
+
             case "time":
             default:
-                // Standard HH:MM:SS (handles > 24 hours correctly)
+                // Standard HH:MM:SS
                 var totalHours = (int)span.TotalHours;
                 return $"{totalHours:D2}:{span.Minutes:D2}:{span.Seconds:D2}";
         }

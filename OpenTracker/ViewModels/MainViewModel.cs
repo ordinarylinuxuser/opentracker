@@ -27,11 +27,8 @@ public class MainViewModel : BindableObject
     private IDispatcherTimer _timer;
     private string _trackerTitle;
 
-    private double _progress;
+    private double _totalDurationValue;
 
-    private double _totalHours;
-
-    // Preference Keys
     private const string PrefIsTracking = "IsTracking";
     private const string PrefStartTime = "TrackingStartTime";
 
@@ -48,9 +45,7 @@ public class MainViewModel : BindableObject
         _notificationService = notificationService;
         ToggleTrackingCommand = new Command(ToggleTracking);
         EditElapsedTimeCommand = new Command(async () => await EditElapsedTime());
-        // Listen for config changes from Settings
         _trackerService.OnTrackerChanged += OnConfigChanged;
-        // Check if config is already loaded (from app startup)
         if (_trackerService.CurrentConfig != null) OnConfigChanged();
     }
 
@@ -58,12 +53,11 @@ public class MainViewModel : BindableObject
 
     #region Binding Properties
 
-    // --- Bindable Properties ---
-
     public ObservableCollection<TrackingStage> Stages { get; set; } = [];
 
-    // Public accessor for ManualEntryPage
     public DateTime StartTime => _startTime;
+
+    public TrackerConfig CurrentConfig => _currentConfig; // Exposed for Drawable
 
     public TrackingStage CurrentStage
     {
@@ -71,17 +65,6 @@ public class MainViewModel : BindableObject
         set
         {
             _currentStage = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public double ElapsedTimeFontSize
-    {
-        get => _currentConfig?.ElapsedTimeFontSize ?? 36d;
-        set
-        {
-            if (_currentConfig == null) return;
-            _currentConfig.ElapsedTimeFontSize = value;
             OnPropertyChanged();
         }
     }
@@ -126,25 +109,14 @@ public class MainViewModel : BindableObject
         }
     }
 
-    public double Progress
+    public double TotalDurationValue
     {
-        get => _progress;
+        get => _totalDurationValue;
         set
         {
-            _progress = value;
-            OnPropertyChanged();
-        }
-    }
-
-
-    public double TotalHours
-    {
-        get => _totalHours;
-        set
-        {
-            if (Math.Abs(_totalHours - value) > 0.001)
+            if (Math.Abs(_totalDurationValue - value) > 0.0001)
             {
-                _totalHours = value;
+                _totalDurationValue = value;
                 OnPropertyChanged();
             }
         }
@@ -154,7 +126,6 @@ public class MainViewModel : BindableObject
 
     #region Commands
 
-    // --- Commands ---
     public ICommand ToggleTrackingCommand { get; }
     public ICommand EditElapsedTimeCommand { get; }
 
@@ -164,14 +135,14 @@ public class MainViewModel : BindableObject
 
     private void OnConfigChanged()
     {
-        // FIX: If we are currently tracking, stop the session before switching.
-        // This ensures data integrity and resets the UI for the new tracker.
         if (IsTracking) StopTracking();
 
         _currentConfig = _trackerService.CurrentConfig;
         if (_currentConfig == null) return;
+        // CRITICAL FIX: Notify the UI that the config object is new
+        // This makes the UI re-bind "CurrentConfig.ElapsedTimeFontSize"
+        OnPropertyChanged(nameof(CurrentConfig));
 
-        // If we are restoring state, don't reset everything immediately
         var wasTracking = Preferences.Get(PrefIsTracking, false);
 
         ApplyConfig();
@@ -181,7 +152,6 @@ public class MainViewModel : BindableObject
 
     private void ApplyConfig()
     {
-        // Don't stop tracking here, just update UI definitions
         Stages.Clear();
         var id = 1;
         foreach (var s in _currentConfig.Stages)
@@ -190,14 +160,12 @@ public class MainViewModel : BindableObject
             Stages.Add(s);
         }
 
-
         TrackerTitle = _currentConfig.TrackerName;
-        ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
 
-        // Initial defaults (will be overwritten if RestoreTrackingState is called)
         if (!IsTracking)
         {
             CurrentStage = _currentConfig.StoppedState;
+            TotalDurationValue = 0;
             StartStopButtonText = _currentConfig.ButtonStartText ?? "Start Tracking";
         }
     }
@@ -221,11 +189,8 @@ public class MainViewModel : BindableObject
     private void StartTracking()
     {
         _startTime = DateTime.Now;
-
-        // Save State
         Preferences.Set(PrefIsTracking, true);
         Preferences.Set(PrefStartTime, _startTime);
-
         StartTrackingInternal(false);
     }
 
@@ -243,12 +208,11 @@ public class MainViewModel : BindableObject
 
         _timer.Start();
 
-        // Start the background notification service
         _notificationService.StartNotification(
             TrackerTitle,
             CurrentStage?.Title ?? "Tracking...",
             _startTime,
-            _currentConfig?.DisplayFormat ?? "Time");
+            _currentConfig?.DurationType ?? "Time");
 
         UpdateProgress();
     }
@@ -257,7 +221,6 @@ public class MainViewModel : BindableObject
     {
         if (IsTracking)
         {
-            // Save Session
             var endTime = DateTime.Now;
             var session = new TrackingSession
             {
@@ -270,15 +233,12 @@ public class MainViewModel : BindableObject
             await _dbService.AddSessionAsync(session);
         }
 
-        // Clear State
         IsTracking = false;
         Preferences.Set(PrefIsTracking, false);
         Preferences.Remove(PrefStartTime);
         _timer?.Stop();
-        // Stop the background service
         _notificationService.StopNotification();
 
-        // Revert to config fallback
         if (_currentConfig != null)
         {
             CurrentStage = _currentConfig.StoppedState;
@@ -286,30 +246,49 @@ public class MainViewModel : BindableObject
         }
 
         ElapsedTime = "00:00:00";
+        // FIX: Reset progress value so the Circle and Badge reset immediately
+        TotalDurationValue = 0;
         foreach (var s in Stages) s.IsActive = false;
     }
 
     private void UpdateProgress()
     {
         var elapsed = DateTime.Now - _startTime;
-        ElapsedTime = FormatHelper.FormatTime(elapsed, _currentConfig.DisplayFormat);
-
         if (_currentConfig != null)
         {
-            ElapsedTimeFontSize = _currentConfig.ElapsedTimeFontSize;
+            ElapsedTime = FormatHelper.FormatTime(elapsed, _currentConfig.DurationType);
 
-            TotalHours = elapsed.TotalHours;
+            // Calculate Value based on DurationType
+            double currentValue = 0;
+            switch (_currentConfig.DurationType?.ToLower())
+            {
+                case "week":
+                case "weeks":
+                    currentValue = elapsed.TotalDays / 7.0; // Value in Weeks
+                    break;
+                case "day":
+                case "days":
+                    currentValue = elapsed.TotalDays; // Value in Days
+                    break;
+                case "time":
+                default:
+                    currentValue = elapsed.TotalHours; // Value in Hours
+                    break;
+            }
 
-            var activeStage = Stages.FirstOrDefault(s => TotalHours >= s.StartHour && TotalHours < s.EndHour);
+            TotalDurationValue = currentValue;
 
-            // If we are past the last stage, stay on the last stage or define behavior
-            if (activeStage == null && Stages.Any() && TotalHours > Stages.Last().EndHour) activeStage = Stages.Last();
+            // Check Stages against generic Start/End
+            var activeStage = Stages.FirstOrDefault(s => TotalDurationValue >= s.Start && TotalDurationValue < s.End);
+
+            if (activeStage == null && Stages.Any() && TotalDurationValue > Stages.Last().End)
+                activeStage = Stages.Last();
 
             if (activeStage != null && CurrentStage != activeStage)
             {
                 CurrentStage = activeStage;
-                // Update the notification text if the stage changes
                 _notificationService.UpdateStage(CurrentStage.Title);
+
             }
 
             foreach (var s in Stages) s.IsActive = s == activeStage;
@@ -318,7 +297,6 @@ public class MainViewModel : BindableObject
 
     private async Task EditElapsedTime()
     {
-        // Open the custom Date/Time Picker Page
         await Shell.Current.Navigation.PushModalAsync(new ManualEntryPage(this));
     }
 
@@ -326,7 +304,6 @@ public class MainViewModel : BindableObject
     {
         _startTime = newTime;
 
-        // If we weren't tracking before, we are now (backdated start)
         if (!IsTracking)
         {
             Preferences.Set(PrefIsTracking, true);
@@ -335,14 +312,12 @@ public class MainViewModel : BindableObject
         }
         else
         {
-            // Just update the persistent time and refresh UI immediately
             Preferences.Set(PrefStartTime, _startTime);
-            // Restart notification to sync the new start time
             _notificationService.StartNotification(
                 TrackerTitle,
                 CurrentStage?.Title ?? "Tracking...",
                 _startTime,
-                _currentConfig?.DisplayFormat ?? "Time");
+                _currentConfig?.DurationType ?? "Time");
             UpdateProgress();
         }
     }
