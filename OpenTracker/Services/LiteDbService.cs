@@ -10,7 +10,11 @@ namespace OpenTracker.Services;
 
 public class LiteDbService : IDbService
 {
+    private const string Sessions = "sessions";
+    private const string Manifest = "manifest";
+    private const string Configs = "configs";
     private readonly string _dbPath;
+
 
     public LiteDbService()
     {
@@ -25,7 +29,7 @@ public class LiteDbService : IDbService
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var col = db.GetCollection<TrackingSession>("sessions");
+            var col = db.GetCollection<TrackingSession>(Sessions);
             col.Insert(session);
         });
     }
@@ -35,7 +39,7 @@ public class LiteDbService : IDbService
         return await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var col = db.GetCollection<TrackingSession>("sessions");
+            var col = db.GetCollection<TrackingSession>(Sessions);
             return col.Query()
                 .Where(s => s.TrackerName.Equals(trackerName, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(x => x.StartTime)
@@ -43,14 +47,24 @@ public class LiteDbService : IDbService
         });
     }
 
+
+    public async Task DeleteSessionAsync(int sessionId)
+    {
+        await Task.Run(() =>
+         {
+             using var db = new LiteDatabase(_dbPath);
+             var col = db.GetCollection<TrackingSession>(Sessions);
+             col.Delete(sessionId);
+         });
+    }
+
     public async Task SeedDatabaseAsync(List<TrackerManifestItem> manifest, List<TrackerConfig> configs)
     {
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var manifestCol = db.GetCollection<TrackerManifestItem>("manifest");
-            var configCol = db.GetCollection<TrackerConfig>("configs");
-
+            var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
+            var configCol = db.GetCollection<TrackerConfig>(Configs);
             // Only insert if empty
             if (manifestCol.Count() == 0)
             {
@@ -65,7 +79,7 @@ public class LiteDbService : IDbService
         return await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var col = db.GetCollection<TrackerManifestItem>("manifest");
+            var col = db.GetCollection<TrackerManifestItem>(Manifest);
             return col.FindAll().ToList();
         });
     }
@@ -75,7 +89,7 @@ public class LiteDbService : IDbService
         return await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var col = db.GetCollection<TrackerConfig>("configs");
+            var col = db.GetCollection<TrackerConfig>(Configs);
             return col.FindById(fileName);
         });
     }
@@ -87,8 +101,8 @@ public class LiteDbService : IDbService
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var manifestCol = db.GetCollection<TrackerManifestItem>("manifest");
-            var configCol = db.GetCollection<TrackerConfig>("configs");
+            var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
+            var configCol = db.GetCollection<TrackerConfig>(Configs);
 
             // Upsert Manifest (Insert or Update)
             manifestCol.Upsert(manifestItem);
@@ -103,11 +117,12 @@ public class LiteDbService : IDbService
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
-            var manifestCol = db.GetCollection<TrackerManifestItem>("manifest");
-            var configCol = db.GetCollection<TrackerConfig>("configs");
+            var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
+            var configCol = db.GetCollection<TrackerConfig>(Configs);
 
             manifestCol.Delete(fileName);
             configCol.Delete(fileName);
         });
     }
+
 }

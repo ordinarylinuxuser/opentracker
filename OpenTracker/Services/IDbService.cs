@@ -9,6 +9,8 @@ namespace OpenTracker.Services;
 public interface IDbService
 {
     Task AddSessionAsync(TrackingSession session);
+    // New delete method
+    Task DeleteSessionAsync(int sessionId);
 
     Task<List<TrackingSession>> GetHistoryAsync(string tackerName);
 
@@ -17,7 +19,6 @@ public interface IDbService
     Task<List<TrackerManifestItem>> GetManifestAsync();
     Task<TrackerConfig?> GetConfigAsync(string fileName);
 
-    // New Methods for Editing
     Task SaveTrackerAsync(TrackerManifestItem manifestItem, TrackerConfig config);
     Task DeleteTrackerAsync(string fileName);
 }
