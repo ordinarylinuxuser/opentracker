@@ -8,6 +8,8 @@ public partial class SettingsPage
     private readonly TrackerService _trackerService;
     private readonly SyncService _syncService;
 
+    private bool _isInitializing; // Add this flag
+
     public SettingsPage(TrackerService trackerService, SyncService syncService)
     {
         InitializeComponent();
@@ -28,26 +30,29 @@ public partial class SettingsPage
 
     private void InitializeSyncUI()
     {
+        _isInitializing = true; // Block events
         // Populate Pickers
         SyncTargetPicker.ItemsSource = Enum.GetNames(typeof(SyncTarget));
         IntervalPicker.ItemsSource = Enum.GetNames(typeof(SyncInterval));
 
         // Load Settings
         var settings = _syncService.Settings;
-        SyncTargetPicker.SelectedIndex = (int)settings.Target;
-        IntervalPicker.SelectedIndex = (int)settings.Interval;
         HostEntry.Text = settings.HostUrl;
         UserEntry.Text = settings.Username;
         PassEntry.Text = settings.Password;
+        SyncTargetPicker.SelectedIndex = (int)settings.Target;
+        IntervalPicker.SelectedIndex = (int)settings.Interval;
 
         if (settings.LastSyncTime != DateTime.MinValue)
             LastSyncLabel.Text = $"Last Sync: {settings.LastSyncTime:g}";
 
         UpdateSyncVisibility();
+        _isInitializing = false; // Enable events
     }
 
     private void OnSyncTargetChanged(object sender, EventArgs e)
     {
+        if (_isInitializing) return; // Skip logic during init
         UpdateSyncVisibility();
         SaveSyncSettings();
     }
@@ -88,23 +93,14 @@ public partial class SettingsPage
         }
     }
 
+    // Existing OnExportClicked modified to use the helper (optional refactor)
     private async void OnExportClicked(object sender, EventArgs e)
     {
         try
         {
             var json = await _syncService.ExportToJsonAsync();
-
-            // For now, copy to clipboard or save to a shared file
             var fileName = $"backup_{DateTime.Now:yyyyMMdd_HHmm}.json";
-            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-            await File.WriteAllTextAsync(filePath, json);
-
-            // Share the file
-            await Share.Default.RequestAsync(new ShareFileRequest
-            {
-                Title = "OpenTracker Backup",
-                File = new ShareFile(filePath)
-            });
+            await ShareFileAsync(json, fileName, "OpenTracker Full Backup");
         }
         catch (Exception ex)
         {
@@ -160,5 +156,46 @@ public partial class SettingsPage
     private async void OnAboutTapped(object sender, EventArgs e)
     {
         await Navigation.PushModalAsync(new AboutPage());
+    }
+
+    // Helper method to reduce code duplication
+    private async Task ShareFileAsync(string content, string fileName, string title)
+    {
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllTextAsync(filePath, content);
+
+        await Share.Default.RequestAsync(new ShareFileRequest
+        {
+            Title = title,
+            File = new ShareFile(filePath)
+        });
+    }
+
+    private async void OnExportHistoryJsonClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var json = await _syncService.ExportHistoryToJsonAsync();
+            var fileName = $"history_{DateTime.Now:yyyyMMdd_HHmm}.json";
+            await ShareFileAsync(json, fileName, "OpenTracker History (JSON)");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
+        }
+    }
+
+    private async void OnExportHistoryCsvClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var csv = await _syncService.ExportHistoryToCsvAsync();
+            var fileName = $"history_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            await ShareFileAsync(csv, fileName, "OpenTracker History (CSV)");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
+        }
     }
 }

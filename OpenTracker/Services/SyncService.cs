@@ -15,6 +15,7 @@ public class SyncService
     private const string SyncSettingsKey = "SyncSettings";
     private const string RemoteFileName = "opentracker_backup.json";
 
+
     // Automation Fields
     private Timer _autoSyncTimer;
     private bool _isSyncing;
@@ -176,7 +177,6 @@ public class SyncService
             // Just save the preference string manually or create a specific internal save method
             var json = JsonSerializer.Serialize(Settings);
             Preferences.Set(SyncSettingsKey, json);
-            LoadSettings(); // Refresh in-memory settings
         }
         catch (Exception ex)
         {
@@ -251,5 +251,34 @@ public class SyncService
     public void Dispose()
     {
         _autoSyncTimer?.Dispose();
+    }
+
+    public async Task<string> ExportHistoryToJsonAsync()
+    {
+        var sessions = await _dbService.GetAllSessionsAsync();
+        return JsonSerializer.Serialize(sessions, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    public async Task<string> ExportHistoryToCsvAsync()
+    {
+        var sessions = await _dbService.GetAllSessionsAsync();
+        var sb = new StringBuilder();
+
+        // CSV Header
+        sb.AppendLine("Id,TrackerName,StartTime,EndTime,DurationSeconds,DurationDisplay");
+
+        foreach (var s in sessions)
+        {
+            // Escape TrackerName in case it contains commas
+            var name = s.TrackerName.Replace("\"", "\"\"");
+            if (name.Contains(',') || name.Contains('\n'))
+            {
+                name = $"\"{name}\"";
+            }
+
+            sb.AppendLine($"{s.Id},{name},{s.StartTime:O},{s.EndTime:O},{s.DurationSeconds},{s.DurationDisplay}");
+        }
+
+        return sb.ToString();
     }
 }
