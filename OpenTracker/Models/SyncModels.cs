@@ -28,9 +28,9 @@ public class SyncSettings
 {
     public SyncTarget Target { get; set; }
     public SyncInterval Interval { get; set; }
-    public string HostUrl { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; } // Consider encryption for production
-    public string BucketName { get; set; } // For S3
+    public string? HostUrl { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; } // Consider encryption for production
+    public string? BucketName { get; set; } // For S3
     public DateTime LastSyncTime { get; set; }
 }

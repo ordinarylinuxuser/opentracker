@@ -15,6 +15,7 @@ public class SyncService
     private const string SyncSettingsKey = "SyncSettings";
     private const string RemoteFileName = "opentracker_backup.json";
 
+
     // Automation Fields
     private Timer _autoSyncTimer;
     private bool _isSyncing;
@@ -176,7 +177,6 @@ public class SyncService
             // Just save the preference string manually or create a specific internal save method
             var json = JsonSerializer.Serialize(Settings);
             Preferences.Set(SyncSettingsKey, json);
-            LoadSettings(); // Refresh in-memory settings
         }
         catch (Exception ex)
         {
