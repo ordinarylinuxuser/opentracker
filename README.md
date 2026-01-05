@@ -101,8 +101,17 @@ This file registers available trackers in the app.
 * [ ] 🐧 **Platform Support:** iOS
 * [ ] 🌍 **Localization:** Add support for translating tracker definitions and UI.
 * [ ] ☁️ **Cloud Sync:** Backup and sync history across devices.
+  * [ ] Integrate with cloud storage providers (Dropbox, Google Drive).
+  * [x] Integrate with WebDAV servers.
+  * [ ] Integrate with S3 buckets.
+  * [x] Integrate with Nextcloud instances.
+  * [ ] Integrate with OneDrive.
+  * [ ] Integrate with SFTP servers.
+
 * [x] ✏️ **In-App Editor:** UI for creating and editing tracker JSON files directly in the app.
 * [ ] 📦 **Export Data:** Export history to CSV or JSON.
+  * [X] Import / Export data JSON.
+  * [ ] Import / Export data CSV.
 
 ---
 

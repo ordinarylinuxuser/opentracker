@@ -8,6 +8,8 @@ public partial class SettingsPage
     private readonly TrackerService _trackerService;
     private readonly SyncService _syncService;
 
+    private bool _isInitializing; // Add this flag
+
     public SettingsPage(TrackerService trackerService, SyncService syncService)
     {
         InitializeComponent();
@@ -28,26 +30,29 @@ public partial class SettingsPage
 
     private void InitializeSyncUI()
     {
+        _isInitializing = true; // Block events
         // Populate Pickers
         SyncTargetPicker.ItemsSource = Enum.GetNames(typeof(SyncTarget));
         IntervalPicker.ItemsSource = Enum.GetNames(typeof(SyncInterval));
 
         // Load Settings
         var settings = _syncService.Settings;
-        SyncTargetPicker.SelectedIndex = (int)settings.Target;
-        IntervalPicker.SelectedIndex = (int)settings.Interval;
         HostEntry.Text = settings.HostUrl;
         UserEntry.Text = settings.Username;
         PassEntry.Text = settings.Password;
+        SyncTargetPicker.SelectedIndex = (int)settings.Target;
+        IntervalPicker.SelectedIndex = (int)settings.Interval;
 
         if (settings.LastSyncTime != DateTime.MinValue)
             LastSyncLabel.Text = $"Last Sync: {settings.LastSyncTime:g}";
 
         UpdateSyncVisibility();
+        _isInitializing = false; // Enable events
     }
 
     private void OnSyncTargetChanged(object sender, EventArgs e)
     {
+        if (_isInitializing) return; // Skip logic during init
         UpdateSyncVisibility();
         SaveSyncSettings();
     }
