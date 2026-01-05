@@ -1,72 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:OpenTracker.ViewModels"
+             xmlns:models="clr-namespace:OpenTracker.Models"
              x:Class="OpenTracker.Pages.HistoryPage"
              BackgroundColor="#121212"
              Title="History">
 
-    <RefreshView IsRefreshing="{Binding IsLoading}" Command="{Binding RefreshCommand}" RefreshColor="#2196F3">
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="25">
+    <Grid RowDefinitions="Auto, Auto, Auto, *" Padding="0">
 
-                <Label Text="Weekly Activity" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" />
+        <Border Grid.Row="0" Margin="15,10" BackgroundColor="#1E1E1E" Stroke="#333" StrokeShape="RoundRectangle 8">
+            <Grid ColumnDefinitions="50, *, 50, 50" Padding="0" HeightRequest="50">
+                <Button Grid.Column="0" Text="‹" Command="{Binding PreviousMonthCommand}"
+                        BackgroundColor="Transparent" TextColor="#2196F3" FontSize="24" />
+                
+                <Label Grid.Column="1" Text="{Binding MonthLabel}" 
+                       TextColor="White" FontAttributes="Bold" FontSize="16"
+                       HorizontalOptions="Center" VerticalOptions="Center"/>
 
-                <Border BackgroundColor="#1E1E1E" Stroke="Transparent" Padding="15" StrokeShape="RoundRectangle 6"
-                        HeightRequest="220">
-                    <Grid RowDefinitions="*, Auto">
-                        <CollectionView Grid.Row="0" ItemsSource="{Binding ChartData}" VerticalOptions="End">
-                            <CollectionView.ItemsLayout>
-                                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
-                            </CollectionView.ItemsLayout>
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <VerticalStackLayout VerticalOptions="End" Spacing="5" WidthRequest="30">
-                                        <Label Text="{Binding ValueLabel}" TextColor="#888" FontSize="10"
-                                               HorizontalOptions="Center" />
-                                        <BoxView Color="{Binding ColorHex}"
-                                                 HeightRequest="{Binding Height}"
-                                                 WidthRequest="12"
-                                                 CornerRadius="4"
-                                                 HorizontalOptions="Center" />
-                                        <Label Text="{Binding DayName}" TextColor="White" FontSize="12"
-                                               HorizontalOptions="Center" />
-                                    </VerticalStackLayout>
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
-                    </Grid>
-                </Border>
+                <Button Grid.Column="2" Text="›" Command="{Binding NextMonthCommand}"
+                        BackgroundColor="Transparent" TextColor="#2196F3" FontSize="24" />
 
-                <Label Text="Recent Sessions" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" Margin="0,10,0,0" />
+                <Button Grid.Column="3" Text="↻" Command="{Binding RefreshCommand}"
+                        BackgroundColor="Transparent" TextColor="Gray" FontSize="18" />
+            </Grid>
+        </Border>
 
-                <CollectionView ItemsSource="{Binding HistoryList}">
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="15,0,15,10" ColumnSpacing="10">
+            <Button Grid.Column="0" Text="Daily" Command="{Binding ToggleChartModeCommand}"
+                    BackgroundColor="{Binding DailyButtonColor}" TextColor="White" HeightRequest="35" FontSize="12" CornerRadius="6" Padding="0"/>
+            <Button Grid.Column="1" Text="Weekly" Command="{Binding ToggleChartModeCommand}"
+                    BackgroundColor="{Binding WeeklyButtonColor}" TextColor="White" HeightRequest="35" FontSize="12" CornerRadius="6" Padding="0"/>
+        </Grid>
+
+        <Border Grid.Row="2" Margin="15,0,15,15" BackgroundColor="#1E1E1E" Stroke="Transparent" 
+                Padding="10" StrokeShape="RoundRectangle 8" HeightRequest="200">
+            <Grid RowDefinitions="*, Auto">
+                <CollectionView Grid.Row="0" ItemsSource="{Binding ChartData}" VerticalOptions="End">
                     <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="4" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border BackgroundColor="#1E1E1E" Stroke="#333" StrokeShape="RoundRectangle 6" Padding="15">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                        <Label Text="{Binding TrackerName}" TextColor="White" FontAttributes="Bold"
-                                               FontSize="16" />
-                                        <Label Text="{Binding StartTime, StringFormat='{0:MMM dd, yyyy  h:mm tt}'}"
-                                               TextColor="Gray" FontSize="12" />
-                                    </VerticalStackLayout>
+                           <Grid RowDefinitions="*, Auto, Auto" WidthRequest="28">
+                                
+                                <Label Grid.Row="0" Text="{Binding ValueLabel}" 
+                                       TextColor="#AAA" FontSize="8" 
+                                       HorizontalOptions="Center" VerticalOptions="End" 
+                                       Margin="0,0,0,2"
+                                       IsVisible="{Binding HasData}"
+                                       MaxLines="1" LineBreakMode="TailTruncation"/>
 
-                                    <Label Grid.Column="1" Text="{Binding DurationDisplay}" TextColor="#2196F3"
-                                           FontAttributes="Bold" VerticalOptions="Center" />
-                                </Grid>
-                            </Border>
+                                <BoxView Grid.Row="1" Color="{Binding ColorHex}" 
+                                         HeightRequest="{Binding HeightRequest}" 
+                                         WidthRequest="10" CornerRadius="3"
+                                         HorizontalOptions="Center" VerticalOptions="End" />
+                                
+                                <Label Grid.Row="2" Text="{Binding Label}" 
+                                       TextColor="#666" FontSize="9" 
+                                       HorizontalOptions="Center" Margin="0,4,0,0"/>
+                            </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                     <CollectionView.EmptyView>
-                        <Label Text="No history yet." TextColor="Gray" HorizontalOptions="Center" Margin="0,50" />
+                        <Label Text="No data for this month" TextColor="Gray" VerticalOptions="Center" HorizontalOptions="Center"/>
                     </CollectionView.EmptyView>
                 </CollectionView>
+                
+                <Border Grid.Row="0" HorizontalOptions="End" VerticalOptions="Start" 
+                        BackgroundColor="#333" Stroke="Transparent" Padding="8,4" StrokeShape="RoundRectangle 4">
+                    <Label Text="{Binding MonthlySummary}" TextColor="#BBB" FontSize="10" FontAttributes="Bold"/>
+                </Border>
+            </Grid>
+        </Border>
 
-            </VerticalStackLayout>
-        </ScrollView>
-    </RefreshView>
+        <CollectionView Grid.Row="3" ItemsSource="{Binding HistoryList}" Margin="15,0">
+            <CollectionView.Header>
+                <Label Text="Sessions" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" Margin="0,0,0,10"/>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,10" BackgroundColor="#1E1E1E" Stroke="#333" StrokeShape="RoundRectangle 8" Padding="12">
+                        <Grid ColumnDefinitions="*, Auto, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center">
+                                <Label Text="{Binding DateDisplay}" TextColor="#2196F3" FontSize="11" FontAttributes="Bold"/>
+                                <Label>
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding StartTime, StringFormat='{0:h:mm tt}'}" TextColor="White" FontSize="16"/>
+                                            <Span Text=" - " TextColor="#666"/>
+                                            <Span Text="{Binding EndTime, StringFormat='{0:h:mm tt}'}" TextColor="White" FontSize="16"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </VerticalStackLayout>
+
+                            <Label Grid.Column="1" Text="{Binding DurationDisplay}" TextColor="#888" 
+                                   FontSize="14" VerticalOptions="Center" HorizontalOptions="End" Margin="10,0"/>
+
+                            <Button Grid.Column="2" Text="✕" 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteSessionCommand}"
+                                    CommandParameter="{Binding .}"
+                                    BackgroundColor="Transparent" TextColor="#FF5252" 
+                                    FontSize="16" WidthRequest="35" HeightRequest="35" Padding="0"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.RowSpan="4" BackgroundColor="#80000000" IsVisible="{Binding IsLoading}">
+            <ActivityIndicator IsRunning="True" Color="#2196F3" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+    </Grid>
 </ContentPage>
