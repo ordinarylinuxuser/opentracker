@@ -26,4 +26,20 @@ public class TrackingSession
             return $"{span.TotalMinutes:F0} mins";
         }
     }
+
+    // New property for smart date display
+    [BsonIgnore]
+    public string DateDisplay
+    {
+        get
+        {
+            // If it ends on the same day, just show one date (e.g. "Jan 01")
+            if (StartTime.Date == EndTime.Date)
+            {
+                return StartTime.ToString("MMM dd");
+            }
+            // If it crosses midnight, show range (e.g. "Jan 01 - Jan 02")
+            return $"{StartTime:MMM dd} - {EndTime:MMM dd}";
+        }
+    }
 }
