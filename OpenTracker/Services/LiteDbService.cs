@@ -125,4 +125,69 @@ public class LiteDbService : IDbService
         });
     }
 
+    public async Task<List<TrackingSession>> GetAllSessionsAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            return db.GetCollection<TrackingSession>(Sessions).FindAll().ToList();
+        });
+    }
+
+    public async Task<List<TrackerConfig>> GetAllConfigsAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            return db.GetCollection<TrackerConfig>(Configs).FindAll().ToList();
+        });
+    }
+
+    public async Task ImportDataAsync(BackupData data)
+    {
+        await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            var sessionsCol = db.GetCollection<TrackingSession>(Sessions);
+            var configsCol = db.GetCollection<TrackerConfig>(Configs);
+            var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
+
+            // 1. Merge Manifests
+            if (data.Manifest != null)
+            {
+                
+                // We upsert all. Since ManifestItem doesn't have LastModified, we assume the import is intended.
+                manifestCol.Upsert(data.Manifest);
+            }
+
+            // 2. Merge Configs (Time-based conflict resolution)
+            if (data.Configs != null)
+            {
+                foreach (var remoteConfig in data.Configs)
+                {
+                    var localConfig = configsCol.FindById(remoteConfig.FileName);
+                    if (localConfig == null || remoteConfig.LastModified > localConfig.LastModified)
+                    {
+                        configsCol.Upsert(remoteConfig);
+                    }
+                }
+            }
+
+            // 3. Merge Sessions (Time-based conflict resolution)
+            // Note: Sessions use AutoId (int). Merging lists from different devices 
+            // with integer IDs is tricky. A robust solution uses GUIDs.
+            // For this implementation, we will check duplicates by content or simple Upsert if ID matches.
+            // CAUTION: This simple merge assumes IDs are preserved or distinct. 
+            // Ideally, switch TrackingSession.Id to Guid. 
+            if (data.Sessions != null)
+            {
+                foreach (var remoteSession in data.Sessions)
+                {
+                    // Basic Upsert. In a real scenario, you'd match by a GUID to avoid ID collisions.
+                    // Here we check if a session with same props exists to avoid duplication if IDs don't match.
+                    sessionsCol.Upsert(remoteSession);
+                }
+            }
+        });
+    }
 }

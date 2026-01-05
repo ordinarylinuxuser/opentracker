@@ -1,8 +1,4 @@
-#region
-
 using LiteDB;
-
-#endregion
 
 namespace OpenTracker.Models;
 
@@ -15,7 +11,10 @@ public class TrackingSession
     public DateTime EndTime { get; set; }
     public double DurationSeconds { get; set; }
 
-    // Not mapped to DB, just for UI
+    // Added for Sync
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+
+    // ... (Keep existing DurationDisplay and DateDisplay properties)
     [BsonIgnore]
     public string DurationDisplay
     {
@@ -27,18 +26,15 @@ public class TrackingSession
         }
     }
 
-    // New property for smart date display
     [BsonIgnore]
     public string DateDisplay
     {
         get
         {
-            // If it ends on the same day, just show one date (e.g. "Jan 01")
             if (StartTime.Date == EndTime.Date)
             {
                 return StartTime.ToString("MMM dd");
             }
-            // If it crosses midnight, show range (e.g. "Jan 01 - Jan 02")
             return $"{StartTime:MMM dd} - {EndTime:MMM dd}";
         }
     }

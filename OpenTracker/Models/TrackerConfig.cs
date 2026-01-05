@@ -72,6 +72,8 @@ public class TrackerConfig : INotifyPropertyChanged
     public required TrackingStage StoppedState { get; set; }
     public required List<TrackingStage> Stages { get; set; } = [];
 
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+
     // -- INotifyPropertyChanged Implementation --
     public event PropertyChangedEventHandler? PropertyChanged;
 

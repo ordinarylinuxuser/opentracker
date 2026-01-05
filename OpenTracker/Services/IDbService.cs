@@ -21,4 +21,10 @@ public interface IDbService
 
     Task SaveTrackerAsync(TrackerManifestItem manifestItem, TrackerConfig config);
     Task DeleteTrackerAsync(string fileName);
+
+
+    // New Sync Methods
+    Task<List<TrackingSession>> GetAllSessionsAsync();
+    Task<List<TrackerConfig>> GetAllConfigsAsync();
+    Task ImportDataAsync(BackupData data);
 }
