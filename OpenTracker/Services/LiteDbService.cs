@@ -41,7 +41,7 @@ public class LiteDbService : IDbService
             using var db = new LiteDatabase(_dbPath);
             var col = db.GetCollection<TrackingSession>(Sessions);
             return col.Query()
-                .Where(s => s.TrackerName.Equals(trackerName, StringComparison.OrdinalIgnoreCase))
+                .Where(s => s.TrackerName.Equals(trackerName, StringComparison.OrdinalIgnoreCase) && !s.IsDeleted)
                 .OrderByDescending(x => x.StartTime)
                 .ToList();
         });
@@ -54,7 +54,14 @@ public class LiteDbService : IDbService
          {
              using var db = new LiteDatabase(_dbPath);
              var col = db.GetCollection<TrackingSession>(Sessions);
-             col.Delete(sessionId);
+             var session = col.FindById(sessionId);
+             if (session != null)
+             {
+                 // Soft Delete
+                 session.IsDeleted = true;
+                 session.LastModified = DateTime.UtcNow;
+                 col.Update(session);
+             }
          });
     }
 
@@ -80,7 +87,7 @@ public class LiteDbService : IDbService
         {
             using var db = new LiteDatabase(_dbPath);
             var col = db.GetCollection<TrackerManifestItem>(Manifest);
-            return col.FindAll().ToList();
+            return col.FindAll().Where(x => !x.IsDeleted).ToList();
         });
     }
 
@@ -90,7 +97,9 @@ public class LiteDbService : IDbService
         {
             using var db = new LiteDatabase(_dbPath);
             var col = db.GetCollection<TrackerConfig>(Configs);
-            return col.FindById(fileName);
+            var config = col.FindById(fileName);
+            // Return null if soft deleted
+            return (config != null && !config.IsDeleted) ? config : null;
         });
     }
 
@@ -98,31 +107,133 @@ public class LiteDbService : IDbService
 
     public async Task SaveTrackerAsync(TrackerManifestItem manifestItem, TrackerConfig config)
     {
+        var now = DateTime.UtcNow;
+        manifestItem.LastModified = now;
+        manifestItem.IsDeleted = false; // Ensure it's active
+
+        config.LastModified = now;
+        config.IsDeleted = false; // Ensure it's active
+
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
             var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
             var configCol = db.GetCollection<TrackerConfig>(Configs);
 
-            // Upsert Manifest (Insert or Update)
             manifestCol.Upsert(manifestItem);
-
-            // Upsert Config
             configCol.Upsert(config);
         });
     }
 
     public async Task DeleteTrackerAsync(string fileName)
     {
+        var now = DateTime.UtcNow;
         await Task.Run(() =>
         {
             using var db = new LiteDatabase(_dbPath);
             var manifestCol = db.GetCollection<TrackerManifestItem>(Manifest);
             var configCol = db.GetCollection<TrackerConfig>(Configs);
 
-            manifestCol.Delete(fileName);
-            configCol.Delete(fileName);
+            // Soft Delete Manifest
+            var manifest = manifestCol.FindById(fileName);
+            if (manifest != null)
+            {
+                manifest.IsDeleted = true;
+                manifest.LastModified = now;
+                manifestCol.Update(manifest);
+            }
+
+            // Soft Delete Config
+            var config = configCol.FindById(fileName);
+            if (config != null)
+            {
+                config.IsDeleted = true;
+                config.LastModified = now;
+                configCol.Update(config);
+            }
         });
     }
 
+    public async Task<List<TrackingSession>> GetAllSessionsAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            return db.GetCollection<TrackingSession>(Sessions).FindAll().ToList();
+        });
+    }
+
+    public async Task<List<TrackerConfig>> GetAllConfigsAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            return db.GetCollection<TrackerConfig>(Configs).FindAll().ToList();
+        });
+    }
+
+    public async Task<List<TrackerManifestItem>> GetAllManifestsAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var db = new LiteDatabase(_dbPath);
+            return db.GetCollection<TrackerManifestItem>(Manifest).FindAll().ToList();
+        });
+    }
+
+    public async Task ImportDataAsync(BackupData data)
+    {
+        await Task.Run(() =>
+         {
+             using var db = new LiteDatabase(_dbPath);
+
+             // 1. Manifests
+             if (data.Manifest != null)
+             {
+                 var col = db.GetCollection<TrackerManifestItem>(Manifest);
+                 foreach (var remoteItem in data.Manifest)
+                 {
+                     var localItem = col.FindById(remoteItem.FileName);
+                     if (localItem == null || remoteItem.LastModified > localItem.LastModified)
+                     {
+                         col.Upsert(remoteItem);
+                     }
+                 }
+             }
+
+             // 2. Configs
+             if (data.Configs != null)
+             {
+                 var col = db.GetCollection<TrackerConfig>(Configs);
+                 foreach (var remoteItem in data.Configs)
+                 {
+                     var localItem = col.FindById(remoteItem.FileName);
+                     if (localItem == null || remoteItem.LastModified > localItem.LastModified)
+                     {
+                         col.Upsert(remoteItem);
+                     }
+                 }
+             }
+
+             // 3. Sessions
+             if (data.Sessions != null)
+             {
+                 var col = db.GetCollection<TrackingSession>(Sessions);
+                 foreach (var remoteItem in data.Sessions)
+                 {
+                     var localItem = col.FindById(remoteItem.Id);
+
+                     // Simple Last-Write-Wins logic
+                     // Note: If IDs are auto-increment integers generated on different devices, 
+                     // this will cause collisions (Item 1 on Device A overwriting Item 1 on Device B).
+                     // For a robust multi-device sync, we usually need GUIDs for IDs.
+                     // Assuming for now this is backup/restore or single-user flow.
+                     if (localItem == null || remoteItem.LastModified > localItem.LastModified)
+                     {
+                         col.Upsert(remoteItem);
+                     }
+                 }
+             }
+         });
+    }
 }

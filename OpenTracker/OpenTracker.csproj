@@ -49,30 +49,31 @@
 
     <ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundScale="0.65" Color="#121212"/>
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundScale="0.65" Color="#121212" />
 
         <!-- Splash Screen -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#121212" BaseSize="128,128"/>
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#121212" BaseSize="128,128" />
 
         <!-- Images -->
-        <MauiImage Include="Resources\Images\*"/>
-        <MauiImage Update="Resources\Images\appicon.svg" Resize="True" BaseSize="300,185"/>
-        <MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185"/>
+        <MauiImage Include="Resources\Images\*" />
+        <MauiImage Update="Resources\Images\appicon.svg" Resize="True" BaseSize="300,185" />
+        <MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
 
         <!-- Custom Fonts -->
-        <MauiFont Include="Resources\Fonts\*"/>
+        <MauiFont Include="Resources\Fonts\*" />
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)"/>
-        <None Remove="Resources\drawable\ic_stat_tracker.png"/>
-        <AndroidResource Include="Resources\drawable\ic_stat_tracker.png"/>
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+        <None Remove="Resources\drawable\ic_stat_tracker.png" />
+        <AndroidResource Include="Resources\drawable\ic_stat_tracker.png" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="LiteDB" Version="5.0.21"/>
-        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0"/>
-        <PackageReference Include="DotNetMeteor.HotReload.Plugin" Version="3.*"/>
+        <PackageReference Include="LiteDB" Version="5.0.21" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+        <PackageReference Include="DotNetMeteor.HotReload.Plugin" Version="3.*" />
+        <PackageReference Include="WebDav.Client" Version="2.9.0" />
     </ItemGroup>
 
     <ItemGroup>

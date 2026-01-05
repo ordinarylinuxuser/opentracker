@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OpenTracker.Pages.SettingsPage"
@@ -11,7 +10,6 @@
 
             <VerticalStackLayout Spacing="10">
                 <Label Text="CONFIGURATION" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" />
-
                 <Border BackgroundColor="#1E1E1E" Stroke="Transparent" Padding="15" StrokeShape="RoundRectangle 6">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnChangeTrackerTapped" />
@@ -19,8 +17,7 @@
                     <Grid ColumnDefinitions="*, Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
                             <Label Text="Active Tracker" TextColor="White" FontSize="16" />
-                            <Label x:Name="CurrentTrackerLabel" Text="Select a tracker type..." TextColor="Gray"
-                                   FontSize="12" />
+                            <Label x:Name="CurrentTrackerLabel" Text="Select a tracker type..." TextColor="Gray" FontSize="12" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="›" TextColor="Gray" FontSize="24" VerticalOptions="Center" />
                     </Grid>
@@ -28,15 +25,50 @@
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="10">
-                <Label Text="APP INFO" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" />
+                <Label Text="SYNCHRONIZATION &amp; BACKUP" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" />
+                
+                <Border BackgroundColor="#1E1E1E" Stroke="Transparent" Padding="15" StrokeShape="RoundRectangle 6">
+                    <VerticalStackLayout Spacing="15">
+                        
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Sync Target" TextColor="White" VerticalOptions="Center"/>
+                            <Picker x:Name="SyncTargetPicker" WidthRequest="150" TextColor="#2196F3" Title="Select Target" SelectedIndexChanged="OnSyncTargetChanged"/>
+                        </Grid>
 
+                        <VerticalStackLayout x:Name="SyncConfigLayout" Spacing="10" IsVisible="False">
+                            <Entry x:Name="HostEntry" Placeholder="Host URL" TextColor="White" PlaceholderColor="#555"/>
+                            <Entry x:Name="UserEntry" Placeholder="Username" TextColor="White" PlaceholderColor="#555"/>
+                            <Entry x:Name="PassEntry" Placeholder="Password" IsPassword="True" TextColor="White" PlaceholderColor="#555"/>
+                            
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Text="Interval" TextColor="White" VerticalOptions="Center"/>
+                                <Picker x:Name="IntervalPicker" WidthRequest="150" TextColor="#2196F3"/>
+                            </Grid>
+                            
+                            <Button Text="Sync Now" Clicked="OnSyncNowClicked" BackgroundColor="#2196F3" TextColor="White"/>
+                            <Label x:Name="LastSyncLabel" Text="Never synced" TextColor="Gray" FontSize="10" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+
+                        <BoxView HeightRequest="1" Color="#333"/>
+
+                        <Label Text="Manual Backup" TextColor="Gray" FontSize="12"/>
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                            <Button Grid.Column="0" Text="Export JSON" Clicked="OnExportClicked" BackgroundColor="#333" TextColor="White"/>
+                            <Button Grid.Column="1" Text="Import JSON" Clicked="OnImportClicked" BackgroundColor="#333" TextColor="White"/>
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="10">
+                <Label Text="APP INFO" TextColor="#2196F3" FontSize="12" FontAttributes="Bold" />
                 <Border BackgroundColor="#1E1E1E" Stroke="Transparent" Padding="15" StrokeShape="RoundRectangle 6">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnAboutTapped" />
                     </Border.GestureRecognizers>
                     <Grid ColumnDefinitions="*, Auto">
-                        <Label Grid.Column="0" Text="About Us" TextColor="White" FontSize="16"
-                               VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="About Us" TextColor="White" FontSize="16" VerticalOptions="Center" />
                         <Label Grid.Column="1" Text="›" TextColor="Gray" FontSize="24" VerticalOptions="Center" />
                     </Grid>
                 </Border>

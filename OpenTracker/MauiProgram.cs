@@ -40,6 +40,7 @@ public static class MauiProgram
         // Services
         builder.Services.AddSingleton<IDbService, LiteDbService>();
         builder.Services.AddSingleton<TrackerService>();
+        builder.Services.AddSingleton<SyncService>();
 
         // ViewModels
         builder.Services.AddSingleton<MainViewModel>();
