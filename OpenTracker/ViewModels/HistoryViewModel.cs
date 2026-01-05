@@ -1,48 +1,57 @@
-#region
-
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using OpenTracker.Models;
 using OpenTracker.Services;
 
-#endregion
-
 namespace OpenTracker.ViewModels;
 
-public class ChartBar
-{
-    public string DayName { get; set; }
-    public double Height { get; set; }
-    public string ColorHex { get; set; }
-    public string ValueLabel { get; set; }
-}
 
 public class HistoryViewModel : BindableObject
 {
     private readonly IDbService _dbService;
     private readonly TrackerService _trackerService;
     private bool _isLoading;
+    private DateTime _currentMonth;
+    private string _monthlySummary = "0 hrs";
 
     public HistoryViewModel(IDbService dbService, TrackerService trackerService)
     {
         _dbService = dbService;
         _trackerService = trackerService;
+
+        // Default to current month
+        _currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+        // Commands
         RefreshCommand = new Command(async () => await LoadHistoryAsync());
+        PreviousMonthCommand = new Command(async () => await ChangeMonth(-1));
+        NextMonthCommand = new Command(async () => await ChangeMonth(1));
+        DeleteSessionCommand = new Command<TrackingSession>(async (s) => await DeleteSession(s));
     }
 
-    public ObservableCollection<TrackingSession> HistoryList { get; set; } = [];
-    public ObservableCollection<ChartBar> ChartData { get; set; } = [];
+    // Collections
+    public ObservableCollection<TrackingSession> HistoryList { get; set; } = new();
 
+    // Properties
     public bool IsLoading
     {
         get => _isLoading;
-        set
-        {
-            _isLoading = value;
-            OnPropertyChanged();
-        }
+        set { _isLoading = value; OnPropertyChanged(); }
     }
 
-    public Command RefreshCommand { get; }
+    public string MonthLabel => _currentMonth.ToString("MMMM yyyy");
+
+    public string MonthlySummary
+    {
+        get => _monthlySummary;
+        set { _monthlySummary = value; OnPropertyChanged(); }
+    }
+
+    // Commands
+    public ICommand RefreshCommand { get; }
+    public ICommand PreviousMonthCommand { get; }
+    public ICommand NextMonthCommand { get; }
+    public ICommand DeleteSessionCommand { get; }
 
     public async Task LoadHistoryAsync()
     {
@@ -53,12 +62,28 @@ public class HistoryViewModel : BindableObject
         {
             var currentConfig = _trackerService.CurrentConfig;
             if (currentConfig == null) return;
-            var sessions = await _dbService.GetHistoryAsync(currentConfig.TrackerName);
+
+            // Get all sessions for this tracker
+            var allSessions = await _dbService.GetHistoryAsync(currentConfig.TrackerName);
+
+            // Filter by current month
+            var filtered = allSessions
+                .Where(s => s.StartTime.Year == _currentMonth.Year && s.StartTime.Month == _currentMonth.Month)
+                .OrderByDescending(s => s.StartTime)
+                .ToList();
 
             HistoryList.Clear();
-            foreach (var s in sessions) HistoryList.Add(s);
+            double totalSeconds = 0;
 
-            PrepareChartData(sessions);
+            foreach (var s in filtered)
+            {
+                HistoryList.Add(s);
+                totalSeconds += s.DurationSeconds;
+            }
+
+            // Calculate Summary
+            var span = TimeSpan.FromSeconds(totalSeconds);
+            MonthlySummary = $"Total: {Math.Floor(span.TotalHours)}h {span.Minutes}m";
         }
         finally
         {
@@ -66,46 +91,23 @@ public class HistoryViewModel : BindableObject
         }
     }
 
-    private void PrepareChartData(List<TrackingSession> sessions)
+    private async Task ChangeMonth(int monthsToAdd)
     {
-        ChartData.Clear();
-
-        // Group by Day (Last 7 days)
-        var last7Days = Enumerable.Range(0, 7)
-            .Select(i => DateTime.Today.AddDays(-6 + i))
-            .ToList();
-
-        var grouped = sessions
-            .Where(s => s.StartTime.Date >= last7Days.First())
-            .GroupBy(s => s.StartTime.Date)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.DurationSeconds));
-
-        // Find max for scaling
-        var maxDuration = grouped.Values.DefaultIfEmpty(0).Max();
-        if (maxDuration == 0) maxDuration = 1;
-
-        foreach (var date in last7Days)
-        {
-            var totalSeconds = grouped.ContainsKey(date) ? grouped[date] : 0;
-            var height = totalSeconds / maxDuration * 150; // 150 is max height of bar UI
-
-            // Min height for visibility if there is data
-            if (totalSeconds > 0 && height < 5) height = 5;
-
-            ChartData.Add(new ChartBar
-            {
-                DayName = date.ToString("ddd"), // Mon, Tue
-                Height = height,
-                ColorHex = totalSeconds > 0 ? "#2196F3" : "#333333",
-                ValueLabel = totalSeconds > 0 ? FormatDuration(totalSeconds) : ""
-            });
-        }
+        _currentMonth = _currentMonth.AddMonths(monthsToAdd);
+        OnPropertyChanged(nameof(MonthLabel));
+        await LoadHistoryAsync();
     }
 
-    private string FormatDuration(double seconds)
+    private async Task DeleteSession(TrackingSession session)
     {
-        var span = TimeSpan.FromSeconds(seconds);
-        if (span.TotalHours >= 1) return $"{span.TotalHours:F1}h";
-        return $"{span.TotalMinutes:F0}m";
+        if (session == null) return;
+
+        bool confirm = await Shell.Current.DisplayAlertAsync("Delete Session",
+            "Are you sure you want to delete this entry?", "Yes", "No");
+
+        if (!confirm) return;
+
+        await _dbService.DeleteSessionAsync(session.Id);
+        await LoadHistoryAsync(); // Reload list
     }
 }
