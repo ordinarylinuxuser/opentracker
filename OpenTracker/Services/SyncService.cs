@@ -1,10 +1,11 @@
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
+using System.Timers; // Add this
 using System.Text.Json;
-using Java.Net;
 using OpenTracker.Models;
 using WebDav;
+using Timer = System.Timers.Timer;
 
 namespace OpenTracker.Services;
 
@@ -14,12 +15,80 @@ public class SyncService
     private const string SyncSettingsKey = "SyncSettings";
     private const string RemoteFileName = "opentracker_backup.json";
 
+    // Automation Fields
+    private Timer _autoSyncTimer;
+    private bool _isSyncing;
+
     public SyncSettings Settings { get; private set; }
 
     public SyncService(IDbService dbService)
     {
         _dbService = dbService;
         LoadSettings();
+        InitializeAutoSync();
+    }
+
+    private void InitializeAutoSync()
+    {
+        // Check every 60 seconds if it's time to sync
+        _autoSyncTimer = new Timer(60000);
+        _autoSyncTimer.Elapsed += async (s, e) => await CheckAndSyncIfNeeded();
+        _autoSyncTimer.AutoReset = true;
+    }
+
+    // Call this from App.xaml.cs OnStart/OnResume
+    public async Task StartAutoSync()
+    {
+        if (Settings.Interval == SyncInterval.Manual || Settings.Target == SyncTarget.None)
+            return;
+
+        // 1. Start the periodic timer
+        if (!_autoSyncTimer.Enabled)
+            _autoSyncTimer.Start();
+
+        // 2. Run an immediate check (e.g. app just opened after 2 days)
+        await CheckAndSyncIfNeeded();
+    }
+
+    public void StopAutoSync()
+    {
+        _autoSyncTimer.Stop();
+    }
+
+    private async Task CheckAndSyncIfNeeded()
+    {
+        if (_isSyncing || Settings.Target == SyncTarget.None || Settings.Interval == SyncInterval.Manual)
+            return;
+
+        var timeSinceLastSync = DateTime.Now - Settings.LastSyncTime;
+        bool shouldSync = false;
+
+        switch (Settings.Interval)
+        {
+            case SyncInterval.Hourly:
+                shouldSync = timeSinceLastSync.TotalHours >= 1;
+                break;
+            case SyncInterval.Daily:
+                shouldSync = timeSinceLastSync.TotalDays >= 1;
+                break;
+            case SyncInterval.Weekly:
+                shouldSync = timeSinceLastSync.TotalDays >= 7;
+                break;
+        }
+
+        if (shouldSync)
+        {
+            Console.WriteLine($"Auto-Sync Triggered. Last Sync was: {Settings.LastSyncTime}");
+            try
+            {
+                await SyncNowAsync();
+            }
+            catch (Exception ex)
+            {
+                // Silently log error for auto-sync so we don't crash or popup alerts in background
+                Console.WriteLine($"Auto-Sync Failed: {ex.Message}");
+            }
+        }
     }
 
     private void LoadSettings()
@@ -39,6 +108,16 @@ public class SyncService
     {
         var json = JsonSerializer.Serialize(Settings);
         Preferences.Set(SyncSettingsKey, json);
+
+        // Re-evaluate automation state
+        if (Settings.Interval != SyncInterval.Manual && Settings.Target != SyncTarget.None)
+        {
+            if (!_autoSyncTimer.Enabled) _autoSyncTimer.Start();
+        }
+        else
+        {
+            if (_autoSyncTimer.Enabled) _autoSyncTimer.Stop();
+        }
     }
 
     public async Task<string> ExportToJsonAsync()
@@ -73,7 +152,9 @@ public class SyncService
 
     public async Task SyncNowAsync()
     {
-        if (Settings.Target == SyncTarget.None) return;
+        if (_isSyncing || Settings.Target == SyncTarget.None) return;
+
+        _isSyncing = true; // Lock
 
         try
         {
@@ -91,11 +172,19 @@ public class SyncService
             }
 
             Settings.LastSyncTime = DateTime.Now;
-            SaveSettings();
+            // Don't call SaveSettings() here to avoid recursion loop with timer logic
+            // Just save the preference string manually or create a specific internal save method
+            var json = JsonSerializer.Serialize(Settings);
+            Preferences.Set(SyncSettingsKey, json);
+            LoadSettings(); // Refresh in-memory settings
         }
         catch (Exception ex)
         {
             throw new Exception($"Sync failed: {ex.Message}");
+        }
+        finally
+        {
+            _isSyncing = false; // Unlock
         }
     }
 
@@ -157,5 +246,10 @@ public class SyncService
     private string EnsureTrailingSlash(string url)
     {
         return url.EndsWith("/") ? url : url + "/";
+    }
+
+    public void Dispose()
+    {
+        _autoSyncTimer?.Dispose();
     }
 }
