@@ -26,5 +26,6 @@ public interface IDbService
     // New Sync Methods
     Task<List<TrackingSession>> GetAllSessionsAsync();
     Task<List<TrackerConfig>> GetAllConfigsAsync();
+    Task<List<TrackerManifestItem>> GetAllManifestsAsync(); // NEW: Returns ALL (including deleted)
     Task ImportDataAsync(BackupData data);
 }

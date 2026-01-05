@@ -13,6 +13,10 @@ public class TrackerManifestItem
     public required string Name { get; set; }
     [BsonId] public required string FileName { get; set; }
     public required string Icon { get; set; }
+
+    // Sync Properties
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; }
 }
 
 public class TrackerConfig : INotifyPropertyChanged
@@ -73,6 +77,7 @@ public class TrackerConfig : INotifyPropertyChanged
     public required List<TrackingStage> Stages { get; set; } = [];
 
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; }
 
     // -- INotifyPropertyChanged Implementation --
     public event PropertyChangedEventHandler? PropertyChanged;

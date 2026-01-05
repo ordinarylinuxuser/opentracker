@@ -11,8 +11,9 @@ public class TrackingSession
     public DateTime EndTime { get; set; }
     public double DurationSeconds { get; set; }
 
-    // Added for Sync
+    // Sync Properties
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; }
 
     // ... (Keep existing DurationDisplay and DateDisplay properties)
     [BsonIgnore]
