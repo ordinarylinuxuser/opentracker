@@ -94,7 +94,7 @@ This file registers available trackers in the app.
 
 ## 🗺️ Roadmap
 
-* [x] 💾 **Persistence:** SQLite/LiteDB integration for history.
+* [x] 💾 **Persistence:** LiteDB integration for history.
 * [x] 🐧 **Platform Support:** Android
 * [ ] 🐧 **Platform Support:** Windows
 * [ ] 🐧 **Platform Support:** MacOS
@@ -107,11 +107,12 @@ This file registers available trackers in the app.
   * [x] Integrate with Nextcloud instances.
   * [ ] Integrate with OneDrive.
   * [ ] Integrate with SFTP servers.
+* [x] 📥 **Backup & Restore:** Local backup and restore of full data.
+* [x] ✏️ **In-App Editor:** UI for creating and editing tracker JSON files directly in the app
 
-* [x] ✏️ **In-App Editor:** UI for creating and editing tracker JSON files directly in the app.
-* [ ] 📦 **Export Data:** Export history to CSV or JSON.
-  * [X] Import / Export data JSON.
-  * [ ] Import / Export data CSV.
+* [x] 📦 **Export Data:** Export history to CSV or JSON.
+  * [x] Export history data JSON.
+  * [x] Export history data CSV.
 
 ---
 

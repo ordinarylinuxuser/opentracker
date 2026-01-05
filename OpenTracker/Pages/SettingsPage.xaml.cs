@@ -93,23 +93,14 @@ public partial class SettingsPage
         }
     }
 
+    // Existing OnExportClicked modified to use the helper (optional refactor)
     private async void OnExportClicked(object sender, EventArgs e)
     {
         try
         {
             var json = await _syncService.ExportToJsonAsync();
-
-            // For now, copy to clipboard or save to a shared file
             var fileName = $"backup_{DateTime.Now:yyyyMMdd_HHmm}.json";
-            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-            await File.WriteAllTextAsync(filePath, json);
-
-            // Share the file
-            await Share.Default.RequestAsync(new ShareFileRequest
-            {
-                Title = "OpenTracker Backup",
-                File = new ShareFile(filePath)
-            });
+            await ShareFileAsync(json, fileName, "OpenTracker Full Backup");
         }
         catch (Exception ex)
         {
@@ -165,5 +156,46 @@ public partial class SettingsPage
     private async void OnAboutTapped(object sender, EventArgs e)
     {
         await Navigation.PushModalAsync(new AboutPage());
+    }
+
+    // Helper method to reduce code duplication
+    private async Task ShareFileAsync(string content, string fileName, string title)
+    {
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllTextAsync(filePath, content);
+
+        await Share.Default.RequestAsync(new ShareFileRequest
+        {
+            Title = title,
+            File = new ShareFile(filePath)
+        });
+    }
+
+    private async void OnExportHistoryJsonClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var json = await _syncService.ExportHistoryToJsonAsync();
+            var fileName = $"history_{DateTime.Now:yyyyMMdd_HHmm}.json";
+            await ShareFileAsync(json, fileName, "OpenTracker History (JSON)");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
+        }
+    }
+
+    private async void OnExportHistoryCsvClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var csv = await _syncService.ExportHistoryToCsvAsync();
+            var fileName = $"history_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            await ShareFileAsync(csv, fileName, "OpenTracker History (CSV)");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
+        }
     }
 }
