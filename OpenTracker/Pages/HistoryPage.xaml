@@ -42,11 +42,20 @@
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid RowDefinitions="*, Auto, Auto" WidthRequest="25">
+                           <Grid RowDefinitions="*, Auto, Auto" WidthRequest="28">
+                                
+                                <Label Grid.Row="0" Text="{Binding ValueLabel}" 
+                                       TextColor="#AAA" FontSize="8" 
+                                       HorizontalOptions="Center" VerticalOptions="End" 
+                                       Margin="0,0,0,2"
+                                       IsVisible="{Binding HasData}"
+                                       MaxLines="1" LineBreakMode="TailTruncation"/>
+
                                 <BoxView Grid.Row="1" Color="{Binding ColorHex}" 
                                          HeightRequest="{Binding HeightRequest}" 
                                          WidthRequest="10" CornerRadius="3"
                                          HorizontalOptions="Center" VerticalOptions="End" />
+                                
                                 <Label Grid.Row="2" Text="{Binding Label}" 
                                        TextColor="#666" FontSize="9" 
                                        HorizontalOptions="Center" Margin="0,4,0,0"/>
