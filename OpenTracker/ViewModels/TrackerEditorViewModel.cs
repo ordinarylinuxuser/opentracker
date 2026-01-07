@@ -1,10 +1,10 @@
 #region
 
-using System.Collections.ObjectModel;
-using System.Windows.Input;
 using OpenTracker.Models;
 using OpenTracker.Pages;
 using OpenTracker.Services;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 #endregion
 
@@ -150,10 +150,10 @@ public class TrackerEditorViewModel : BindableObject
         _editingConfig.DurationType = DurationType;
         _editingConfig.CycleLength = CycleLength;
         _editingConfig.Stages = Stages.ToList();
+        int i = 1;
+        _editingConfig.Stages.ForEach(s => s.Id = i++);
 
-        if (_editingConfig.StoppedState == null)
-            _editingConfig.StoppedState = new TrackingStage
-            { Title = "Stopped", Description = "Not running", Icon = "zzz", ColorHex = "#555555" };
+        _editingConfig.StoppedState ??= new TrackingStage { Title = "Stopped", Description = "Not running", Icon = "zzz", ColorHex = "#555555" };
 
         await _dbService.SaveTrackerAsync(_editingItem, _editingConfig);
         await Shell.Current.Navigation.PopModalAsync();

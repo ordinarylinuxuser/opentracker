@@ -4,7 +4,7 @@ namespace OpenTracker.Models;
 
 public class TrackingSession
 {
-    [BsonId] public int Id { get; set; }
+    [BsonId] public Guid Id { get; set; }
 
     public string TrackerName { get; set; }
     public DateTime StartTime { get; set; }
