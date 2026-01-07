@@ -1,9 +1,9 @@
 #region
 
-using System.Diagnostics;
 using OpenTracker.Constants;
 using OpenTracker.Models;
 using OpenTracker.Utilities;
+using System.Diagnostics;
 
 #endregion
 
@@ -15,8 +15,6 @@ public class TrackerService
 
     public TrackerConfig CurrentConfig { get; private set; }
     public List<TrackerManifestItem> Manifest { get; private set; } = [];
-
-    private const string LastConfigKey = "LastConfigFileName";
 
     public event Action OnTrackerChanged;
 
@@ -47,6 +45,12 @@ public class TrackerService
                         // Link the config to the manifest item via FileName
                         config.FileName = item.FileName;
                         config.TrackerName = item.Name;
+                        // Assign IDs to stages
+                        int id = 1;
+                        config.Stages.ForEach(stage =>
+                        {
+                            stage.Id = id++;
+                        });
                         rawConfigs.Add(config);
                     }
                     catch (Exception ex)
@@ -64,7 +68,7 @@ public class TrackerService
             }
 
             // 2. Load Config (Last used or Default)
-            var lastConfig = Preferences.Get(LastConfigKey, AppConstants.DefaultTrackerFile);
+            var lastConfig = Preferences.Get(AppConstants.PrefLastConfig, AppConstants.DefaultTrackerFile);
             await LoadTrackerConfigAsync(lastConfig);
         }
         catch (Exception ex)
@@ -88,7 +92,8 @@ public class TrackerService
             }
 
             // Save preference
-            Preferences.Set(LastConfigKey, filename);
+            Preferences.Set(AppConstants.PrefLastConfig, filename);
+            Preferences.Set(AppConstants.PrefActiveStateModified, DateTime.UtcNow.ToString("o"));
 
             OnTrackerChanged?.Invoke();
         }

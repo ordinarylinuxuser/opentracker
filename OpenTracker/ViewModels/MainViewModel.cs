@@ -1,11 +1,12 @@
 #region
 
-using System.Collections.ObjectModel;
-using System.Windows.Input;
+using OpenTracker.Constants;
 using OpenTracker.Models;
 using OpenTracker.Pages;
 using OpenTracker.Services;
 using OpenTracker.Utilities;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 #endregion
 
@@ -28,9 +29,6 @@ public class MainViewModel : BindableObject
     private string _trackerTitle;
 
     private double _totalDurationValue;
-
-    private const string PrefIsTracking = "IsTracking";
-    private const string PrefStartTime = "TrackingStartTime";
 
     #endregion
 
@@ -143,7 +141,7 @@ public class MainViewModel : BindableObject
         // This makes the UI re-bind "CurrentConfig.ElapsedTimeFontSize"
         OnPropertyChanged(nameof(CurrentConfig));
 
-        var wasTracking = Preferences.Get(PrefIsTracking, false);
+        var wasTracking = Preferences.Get(AppConstants.PrefIsTracking, false);
 
         ApplyConfig();
 
@@ -153,10 +151,8 @@ public class MainViewModel : BindableObject
     private void ApplyConfig()
     {
         Stages.Clear();
-        var id = 1;
         foreach (var s in _currentConfig.Stages)
         {
-            s.Id = id++;
             Stages.Add(s);
         }
 
@@ -172,7 +168,7 @@ public class MainViewModel : BindableObject
 
     private void RestoreTrackingState()
     {
-        var savedTime = Preferences.Get(PrefStartTime, DateTime.MinValue);
+        var savedTime = Preferences.Get(AppConstants.PrefStartTime, DateTime.MinValue);
         if (savedTime != DateTime.MinValue)
         {
             _startTime = savedTime;
@@ -186,11 +182,18 @@ public class MainViewModel : BindableObject
         else StartTracking();
     }
 
+    private void UpdateActiveStateTimestamp()
+    {
+        // Store as ISO 8601 string for reliable persistence in Preferences
+        Preferences.Set(AppConstants.PrefActiveStateModified, DateTime.UtcNow.ToString("O"));
+    }
+
     private void StartTracking()
     {
         _startTime = DateTime.Now;
-        Preferences.Set(PrefIsTracking, true);
-        Preferences.Set(PrefStartTime, _startTime);
+        Preferences.Set(AppConstants.PrefIsTracking, true);
+        Preferences.Set(AppConstants.PrefStartTime, _startTime);
+        UpdateActiveStateTimestamp(); // Record that we changed the state
         StartTrackingInternal(false);
     }
 
@@ -234,8 +237,9 @@ public class MainViewModel : BindableObject
         }
 
         IsTracking = false;
-        Preferences.Set(PrefIsTracking, false);
-        Preferences.Remove(PrefStartTime);
+        Preferences.Set(AppConstants.PrefIsTracking, false);
+        Preferences.Remove(AppConstants.PrefStartTime);
+        UpdateActiveStateTimestamp(); // Record that we changed the state
         _timer?.Stop();
         _notificationService.StopNotification();
 
@@ -306,13 +310,14 @@ public class MainViewModel : BindableObject
 
         if (!IsTracking)
         {
-            Preferences.Set(PrefIsTracking, true);
-            Preferences.Set(PrefStartTime, _startTime);
+            Preferences.Set(AppConstants.PrefIsTracking, true);
+            Preferences.Set(AppConstants.PrefStartTime, _startTime);
+            UpdateActiveStateTimestamp(); // Record the manual adjustment
             StartTrackingInternal(true);
         }
         else
         {
-            Preferences.Set(PrefStartTime, _startTime);
+            Preferences.Set(AppConstants.PrefStartTime, _startTime);
             _notificationService.StartNotification(
                 TrackerTitle,
                 CurrentStage?.Title ?? "Tracking...",

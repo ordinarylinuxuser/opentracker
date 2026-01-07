@@ -48,7 +48,7 @@ public class LiteDbService : IDbService
     }
 
 
-    public async Task DeleteSessionAsync(int sessionId)
+    public async Task DeleteSessionAsync(Guid sessionId)
     {
         await Task.Run(() =>
          {
@@ -223,11 +223,6 @@ public class LiteDbService : IDbService
                  {
                      var localItem = col.FindById(remoteItem.Id);
 
-                     // Simple Last-Write-Wins logic
-                     // Note: If IDs are auto-increment integers generated on different devices, 
-                     // this will cause collisions (Item 1 on Device A overwriting Item 1 on Device B).
-                     // For a robust multi-device sync, we usually need GUIDs for IDs.
-                     // Assuming for now this is backup/restore or single-user flow.
                      if (localItem == null || remoteItem.LastModified > localItem.LastModified)
                      {
                          col.Upsert(remoteItem);

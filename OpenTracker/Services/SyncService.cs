@@ -1,9 +1,9 @@
+using OpenTracker.Constants;
+using OpenTracker.Models;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
-using System.Timers; // Add this
 using System.Text.Json;
-using OpenTracker.Models;
 using WebDav;
 using Timer = System.Timers.Timer;
 
@@ -12,8 +12,6 @@ namespace OpenTracker.Services;
 public class SyncService
 {
     private readonly IDbService _dbService;
-    private const string SyncSettingsKey = "SyncSettings";
-    private const string RemoteFileName = "opentracker_backup.json";
 
 
     // Automation Fields
@@ -94,7 +92,7 @@ public class SyncService
 
     private void LoadSettings()
     {
-        var json = Preferences.Get(SyncSettingsKey, null);
+        var json = Preferences.Get(AppConstants.SyncSettingsKey, null);
         if (string.IsNullOrEmpty(json))
         {
             Settings = new SyncSettings { Target = SyncTarget.None, Interval = SyncInterval.Manual };
@@ -108,7 +106,7 @@ public class SyncService
     public void SaveSettings()
     {
         var json = JsonSerializer.Serialize(Settings);
-        Preferences.Set(SyncSettingsKey, json);
+        Preferences.Set(AppConstants.SyncSettingsKey, json);
 
         // Re-evaluate automation state
         if (Settings.Interval != SyncInterval.Manual && Settings.Target != SyncTarget.None)
@@ -123,12 +121,25 @@ public class SyncService
 
     public async Task<string> ExportToJsonAsync()
     {
+        // 1. Capture the local modified time, defaulting to MinValue if never set
+        var localModifiedStr = Preferences.Get(AppConstants.PrefActiveStateModified, DateTime.MinValue.ToString("O"));
+        DateTime.TryParse(localModifiedStr, out var localModified);
+
+        var activeState = new ActiveTrackingState
+        {
+            IsTracking = Preferences.Get(AppConstants.PrefIsTracking, false),
+            StartTime = Preferences.Get(AppConstants.PrefStartTime, DateTime.MinValue),
+            SelectedTrackerFileName = Preferences.Get(AppConstants.PrefLastConfig, "config_fasting.json"),
+            LastModified = localModified // Send our local timestamp
+        };
+
         var backup = new BackupData
         {
             ExportDate = DateTime.UtcNow,
             Manifest = await _dbService.GetManifestAsync(),
             Configs = await _dbService.GetAllConfigsAsync(),
-            Sessions = await _dbService.GetAllSessionsAsync()
+            Sessions = await _dbService.GetAllSessionsAsync(),
+            ActiveState = activeState
         };
 
         return JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true });
@@ -142,6 +153,25 @@ public class SyncService
             if (backup != null)
             {
                 await _dbService.ImportDataAsync(backup);
+
+                // 2. Resolve Active State Conflicts
+                if (backup.ActiveState != null)
+                {
+                    var localModifiedStr = Preferences.Get(AppConstants.PrefActiveStateModified, DateTime.MinValue.ToString("O"));
+                    DateTime.TryParse(localModifiedStr, out var localModified);
+
+                    // Only apply remote state if the remote timestamp is strictly newer
+                    if (backup.ActiveState.LastModified > localModified)
+                    {
+                        Preferences.Set(AppConstants.PrefIsTracking, backup.ActiveState.IsTracking);
+                        Preferences.Set(AppConstants.PrefStartTime, backup.ActiveState.StartTime);
+                        Preferences.Set(AppConstants.PrefLastConfig, backup.ActiveState.SelectedTrackerFileName);
+                        Preferences.Set(AppConstants.PrefActiveStateModified, backup.ActiveState.LastModified.ToString("O"));
+
+                        // NOTE: After this, the app should ideally reload the MainPage 
+                        // to reflect the new tracking state or config.
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -176,7 +206,7 @@ public class SyncService
             // Don't call SaveSettings() here to avoid recursion loop with timer logic
             // Just save the preference string manually or create a specific internal save method
             var json = JsonSerializer.Serialize(Settings);
-            Preferences.Set(SyncSettingsKey, json);
+            Preferences.Set(AppConstants.SyncSettingsKey, json);
         }
         catch (Exception ex)
         {
@@ -209,7 +239,7 @@ public class SyncService
 
         // 2. Try Download Remote File (Merge Strategy)
         // We download first to ensure we don't overwrite remote changes with older local data.
-        var getResponse = await client.GetRawFile(RemoteFileName);
+        var getResponse = await client.GetRawFile(AppConstants.RemoteFileName);
 
         if (getResponse.IsSuccessful && getResponse.Stream != null)
         {
@@ -232,7 +262,7 @@ public class SyncService
 
         // 4. Upload Merged Data
         using var uploadStream = new MemoryStream(Encoding.UTF8.GetBytes(mergedJson));
-        var putResponse = await client.PutFile(RemoteFileName, uploadStream, new PutFileParameters
+        var putResponse = await client.PutFile(AppConstants.RemoteFileName, uploadStream, new PutFileParameters
         {
             ContentType = new MediaTypeHeaderValue(MediaTypeNames.Application.Json)
         });

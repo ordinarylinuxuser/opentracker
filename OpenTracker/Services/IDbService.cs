@@ -10,7 +10,7 @@ public interface IDbService
 {
     Task AddSessionAsync(TrackingSession session);
     // New delete method
-    Task DeleteSessionAsync(int sessionId);
+    Task DeleteSessionAsync(Guid sessionId);
 
     Task<List<TrackingSession>> GetHistoryAsync(string tackerName);
 
