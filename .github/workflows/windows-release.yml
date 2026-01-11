@@ -78,6 +78,9 @@ jobs:
           $appVersionInt = $runNum
 
           Write-Host "Building Windows App: DisplayVersion=$appDisplayVersion, AppVersion=$appVersionInt"
+          
+          # Define Output Folder
+          $outputDir = "${{ github.workspace }}\build_output"
 
           # 4. Publish
           dotnet publish OpenTracker/OpenTracker.csproj `
@@ -88,14 +91,19 @@ jobs:
             -p:WindowsPackageType=MSIX `
             -p:AppxPackageSigningEnabled=true `
             -p:PackageCertificateThumbprint="${{ env.WINDOWS_CERT_THUMBPRINT }}" `
-            --output ./build_output
+            -p:AppxPackageDir="$outputDir" `
+            --output "$outputDir"
+
+      # DEBUG: LIST FILES (Helps verify where the file actually landed)
+      - name: List Output Files
+        run: dir "${{ github.workspace }}\build_output" /s
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         if: github.event_name == 'release'
         with:
           files: |
-            ./build_output/*.msix
+            ./build_output/**/*.msix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -104,4 +112,4 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         with:
           name: OpenTracker-Windows
-          path: ./build_output/*.msix
+          path: ./build_output/**/*.msix
