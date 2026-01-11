@@ -1,6 +1,5 @@
 #region
 
-using System.Timers;
 using _Microsoft.Android.Resource.Designer;
 using Android.App;
 using Android.Content;
@@ -8,6 +7,7 @@ using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
 using OpenTracker.Utilities;
+using System.Timers;
 using Timer = System.Timers.Timer;
 
 #endregion
@@ -153,7 +153,7 @@ public class TickerService : Service
         var manager = GetSystemService(NotificationService) as NotificationManager;
         if (manager == null) return;
 
-        var channel = new NotificationChannel(ChannelId, "Open Tracker Progress", NotificationImportance.Low)
+        var channel = new NotificationChannel(ChannelId, "Open Tracker Progress", NotificationImportance.Default)
         {
             Description = "Shows ongoing tracking progress"
         };
