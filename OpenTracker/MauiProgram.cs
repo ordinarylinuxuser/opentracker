@@ -1,12 +1,9 @@
-﻿#region
-
-using DotNet.Meteor.HotReload.Plugin;
+﻿
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using OpenTracker.Pages;
 using OpenTracker.Services;
 using OpenTracker.ViewModels;
-
-#endregion
 
 namespace OpenTracker;
 
@@ -17,14 +14,40 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-#if DEBUG
-            // .EnableHotReload()
-#endif
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+#if WINDOWS
+
+        // --- ADD THIS BLOCK ---
+        builder.ConfigureLifecycleEvents(events =>
+    {
+        events.AddWindows(wndLifeCycleBuilder =>
+        {
+            wndLifeCycleBuilder.OnWindowCreated(window =>
+            {
+                // 1. Get the Window Handle
+                var handle = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+                var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
+
+                // 2. Set Fixed Size (e.g. 450x800 for a phone-like look)
+                appWindow.Resize(new Windows.Graphics.SizeInt32(450, 1000));
+
+                // 3. Disable Resizing and Maximizing to enforce the "App" feel
+                var presenter = appWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+                if (presenter != null)
+                {
+                    presenter.IsMaximizable = true;
+                    presenter.IsResizable = true;
+                }
+            });
+        });
+    });
+#endif
 
 #if DEBUG
         builder.Logging.AddDebug();
@@ -34,7 +57,7 @@ public static class MauiProgram
         builder.Services
             .AddSingleton<INotificationService, AndroidNotificationService>();
 #else
-    // Dummy implementation for iOS/Windows to prevent crashes
+        // Dummy implementation for iOS/Windows to prevent crashes
         builder.Services.AddSingleton<INotificationService>(new MockNotificationService());
 #endif
         // Services

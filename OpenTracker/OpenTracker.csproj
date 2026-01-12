@@ -39,6 +39,10 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <DefaultLanguage>en-us</DefaultLanguage>
+        <PlatformTarget>x64</PlatformTarget>
+        <Platforms>AnyCPU;x64</Platforms>
+        <PackageCertificateThumbprint>4D5F3A66362B5D32262CF269DFC4B496619ABB80</PackageCertificateThumbprint>
+        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     </PropertyGroup>
 
     <!-- Only set Android RIDs when building the Android target framework -->

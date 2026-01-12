@@ -99,4 +99,9 @@ public partial class StageEditorPage : ContentPage
         _onSave?.Invoke(_stage);
         await Navigation.PopModalAsync();
     }
+
+    private async void OnCancelClicked(object sender, EventArgs e)
+    {
+        await Navigation.PopModalAsync();
+    }
 }
