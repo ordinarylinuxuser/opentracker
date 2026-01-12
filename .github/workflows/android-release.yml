@@ -53,9 +53,25 @@ jobs:
       # We pass the ABSOLUTE PATH to the keystore so MSBuild cannot get lost
       - name: Build and Sign Android APK
         run: |
+          # 1. Determine Version Name from Release Tag
+          # If triggered by a release, this holds the tag (e.g., "v1.0.0").
+          # If manual dispatch, it falls back to a dev version.
+          $versionName = "${{ github.event.release.tag_name }}"
+          if ([string]::IsNullOrWhiteSpace($versionName)) {
+              $versionName = "1.0.${{ github.run_number }}-dev"
+          }
+          
+          # 2. Determine Version Code (Integer)
+          # We use the GitHub Run Number to ensure it always increments.
+          $versionCode = "${{ github.run_number }}"
+
+          Write-Host "Building App: VersionName=$versionName, VersionCode=$versionCode"
+
           dotnet publish OpenTracker/OpenTracker.csproj `
             -f net10.0-android `
             -c Release `
+            -p:ApplicationDisplayVersion="$versionName" `
+            -p:ApplicationVersion="$versionCode" `
             -p:AndroidPackageFormat=apk `
             -p:AndroidKeyStore=true `
             -p:AndroidSigningKeyStore="${{ github.workspace }}\user.keystore" `
