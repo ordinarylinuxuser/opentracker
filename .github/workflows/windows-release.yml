@@ -47,33 +47,39 @@ jobs:
       # Windows requires versions in Major.Minor.Build.Revision format (e.g., 1.0.15.0)
       - name: Build and Sign Windows MSIX
         run: |
-          # 1. Determine Version Name (Tag)
+          # 1. Get Tag and strip 'v' (v0.0.10 -> 0.0.10)
           $tagName = "${{ github.event.release.tag_name }}"
-          if ([string]::IsNullOrWhiteSpace($tagName)) {
-              $tagName = "1.0.0" # Fallback
-          }
-          # Strip 'v' prefix if present (v1.0 -> 1.0)
           $cleanVersion = $tagName -replace '^v',''
-
-          # 2. Determine Version Code (4-part format required for MSIX)
-          # We append the GitHub Run Number as the 3rd or 4th digit to ensure uniqueness
-          # Example: If tag is 1.2, result is 1.2.45.0
-          $msixVersion = "$cleanVersion.${{ github.run_number }}.0"
           
-          # Fix: If the tag already had 3 parts (1.2.3), we just append the run number as revision
-          if ($cleanVersion.Split('.').Count -ge 3) {
-             $msixVersion = "$cleanVersion.${{ github.run_number }}"
+          if ([string]::IsNullOrWhiteSpace($cleanVersion)) {
+              $cleanVersion = "1.0.0"
           }
 
-          Write-Host "Building Windows App: DisplayVersion=$tagName, MsixVersion=$msixVersion"
+          # 2. Create MSIX Version (4 parts required: Major.Minor.Build.Revision)
+          # If tag is 0.0.10, we append run_number to make it 0.0.10.45
+          # If tag is 1.0, we append .0.run_number -> 1.0.0.45
+          $parts = $cleanVersion.Split('.')
+          $runNum = "${{ github.run_number }}"
+          
+          if ($parts.Count -eq 3) {
+             $appDisplayVersion = "$cleanVersion.$runNum"
+          } elseif ($parts.Count -eq 2) {
+             $appDisplayVersion = "$cleanVersion.0.$runNum"
+          } else {
+             $appDisplayVersion = "$cleanVersion" 
+          }
 
-          # 3. Publish
-          # We explicitly set WindowsPackageType=MSIX because your csproj defaults to 'None'
+          # 3. ApplicationVersion MUST be an integer (for internal build checks)
+          $appVersionInt = $runNum
+
+          Write-Host "Building Windows App: DisplayVersion=$appDisplayVersion, AppVersion=$appVersionInt"
+
+          # 4. Publish
           dotnet publish OpenTracker/OpenTracker.csproj `
             -f net10.0-windows10.0.19041.0 `
             -c Release `
-            -p:ApplicationDisplayVersion="$tagName" `
-            -p:ApplicationVersion="$msixVersion" `
+            -p:ApplicationDisplayVersion="$appDisplayVersion" `
+            -p:ApplicationVersion="$appVersionInt" `
             -p:WindowsPackageType=MSIX `
             -p:AppxPackageSigningEnabled=true `
             -p:PackageCertificateKeyFile="${{ github.workspace }}\GitHubActionsWorkflow.pfx" `
