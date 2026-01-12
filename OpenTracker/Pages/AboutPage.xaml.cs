@@ -19,4 +19,9 @@ public partial class AboutPage
         // Replace with your actual repo URL
         await Launcher.Default.OpenAsync(AppConstants.GitHubRepoUrl);
     }
+
+    private async void OnCloseClicked(object sender, EventArgs e)
+    {
+        await Navigation.PopModalAsync();
+    }
 }

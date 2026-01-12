@@ -6,13 +6,13 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
-  <Identity Name="maui-package-name-placeholder" Publisher="CN=User Name" Version="0.0.0.0" />
+  <Identity Name="opentracker" Publisher="CN=Krunal Parekh" Version="0.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="328F8DAC-B288-4715-AC55-2D8B38EA9EAA" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>$placeholder$</DisplayName>
-    <PublisherDisplayName>User Name</PublisherDisplayName>
+    <DisplayName>OpenTracker</DisplayName>
+    <PublisherDisplayName>ordinarylinuxuser</PublisherDisplayName>
     <Logo>$placeholder$.png</Logo>
   </Properties>
 
@@ -28,11 +28,10 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="$placeholder$"
-        Description="$placeholder$"
+        DisplayName="OpenTracker"
         Square150x150Logo="$placeholder$.png"
         Square44x44Logo="$placeholder$.png"
-        BackgroundColor="transparent">
+        BackgroundColor="transparent" Description="Open Tracker is a highly configurable tracker app built with .NET MAUI. It empowers users to track any time-based process—from intermittent fasting and Pomodoro timers to pregnancy milestones—simply by switching configurations.">
         <uap:DefaultTile Square71x71Logo="$placeholder$.png" Wide310x150Logo="$placeholder$.png" Square310x310Logo="$placeholder$.png" />
         <uap:SplashScreen Image="$placeholder$.png" />
       </uap:VisualElements>
@@ -41,6 +40,8 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient"/>
+    <Capability Name="internetClientServer"/>
   </Capabilities>
 
 </Package>
