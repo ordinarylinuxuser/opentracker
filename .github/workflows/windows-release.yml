@@ -61,13 +61,7 @@ jobs:
           $parts = $cleanVersion.Split('.')
           $runNum = "${{ github.run_number }}"
           
-          if ($parts.Count -eq 3) {
-             $appDisplayVersion = "$cleanVersion.$runNum"
-          } elseif ($parts.Count -eq 2) {
-             $appDisplayVersion = "$cleanVersion.0.$runNum"
-          } else {
-             $appDisplayVersion = "$cleanVersion" 
-          }
+          $appDisplayVersion = "$cleanVersion" 
 
           # 3. ApplicationVersion MUST be an integer (for internal build checks)
           $appVersionInt = $runNum
