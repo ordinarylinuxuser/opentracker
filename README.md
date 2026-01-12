@@ -96,7 +96,7 @@ This file registers available trackers in the app.
 
 * [x] 💾 **Persistence:** LiteDB integration for history.
 * [x] 🐧 **Platform Support:** Android
-* [ ] 🐧 **Platform Support:** Windows
+* [x] 🐧 **Platform Support:** Windows
 * [ ] 🐧 **Platform Support:** MacOS
 * [ ] 🐧 **Platform Support:** iOS
 * [ ] 🌍 **Localization:** Add support for translating tracker definitions and UI.
