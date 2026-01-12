@@ -26,7 +26,7 @@
             <Label Grid.Row="0" Grid.Column="1" Text="ordinarylinuxuser" TextColor="White" FontAttributes="Bold" />
 
             <Label Grid.Row="1" Grid.Column="0" Text="License:" TextColor="#888" />
-            <Label Grid.Row="1" Grid.Column="1" Text="Open Source (MIT)" TextColor="White" />
+            <Label Grid.Row="1" Grid.Column="1" Text="GPL-3.0" TextColor="White" />
         </Grid>
 
         <Button Text="View on GitHub"
