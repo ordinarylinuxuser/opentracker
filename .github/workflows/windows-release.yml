@@ -99,7 +99,7 @@ jobs:
         if: github.event_name == 'release'
         with:
           files: |
-            ./build_output/**/*.msix
+            ./build_output/**/OpenTracker*.msix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -108,4 +108,4 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         with:
           name: OpenTracker-Windows
-          path: ./build_output/**/*.msix
+          path: ./build_output/**/OpenTracker*.msix
